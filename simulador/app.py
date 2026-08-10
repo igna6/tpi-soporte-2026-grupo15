@@ -119,13 +119,29 @@ def get_news(ticker):
         stock = yf.Ticker(ticker)
         noticias = stock.news
         result = []
-        for n in noticias[:5]: # Solo ultimas 5
-            result.append({
-                'title': n.get('title'),
-                'link': n.get('link'),
-                'publisher': n.get('publisher'),
-                'time': n.get('providerPublishTime')
-            })
+        for n in noticias[:5]:
+            # Dependiendo de la version de yfinance, la estructura puede variar
+            if 'content' in n:
+                content = n['content']
+                provider = content.get('provider', {})
+                link = content.get('previewUrl', '')
+                if not link and 'canonicalUrl' in content:
+                    link = content['canonicalUrl'].get('url', '')
+                
+                result.append({
+                    'title': content.get('title'),
+                    'link': link,
+                    'publisher': provider.get('displayName', 'Desconocido'),
+                    'time': content.get('pubDate')
+                })
+            else:
+                # Estructura antigua
+                result.append({
+                    'title': n.get('title'),
+                    'link': n.get('link'),
+                    'publisher': n.get('publisher'),
+                    'time': n.get('providerPublishTime')
+                })
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

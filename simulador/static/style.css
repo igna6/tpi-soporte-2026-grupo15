@@ -329,8 +329,10 @@ td strong {
 
 .trade-controls {
     display: flex;
-    gap: 1.5rem;
-    align-items: center;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-top: 1rem;
 }
 
 .input-group {

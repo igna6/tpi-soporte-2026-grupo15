@@ -253,12 +253,16 @@ async function loadAssetNews(ticker) {
             }
             
             news.forEach(n => {
-                const date = new Date(n.time * 1000).toLocaleDateString();
+                let dateStr = '';
+                if (n.time) {
+                    const dateObj = typeof n.time === 'number' ? new Date(n.time * 1000) : new Date(n.time);
+                    dateStr = dateObj.toLocaleDateString();
+                }
                 const div = document.createElement('div');
                 div.className = 'news-item';
                 div.innerHTML = `
-                    <a href="${n.link}" target="_blank">${n.title}</a>
-                    <div class="news-meta">${n.publisher} • ${date}</div>
+                    <a href="${n.link}" target="_blank">${n.title || 'Sin Título'}</a>
+                    <div class="news-meta">${n.publisher || 'Desconocido'} • ${dateStr}</div>
                 `;
                 container.appendChild(div);
             });
