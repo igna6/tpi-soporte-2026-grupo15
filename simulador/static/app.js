@@ -1,6 +1,7 @@
 // Variables Globales
 let chart;
 let lineSeries;
+let smaSeries;
 let currentTicker = null;
 
 // Inicialización
@@ -70,6 +71,14 @@ function initChart() {
         borderUpColor: '#16a34a',
         wickDownColor: '#dc2626',
         wickUpColor: '#16a34a',
+    });
+
+    smaSeries = chart.addLineSeries({
+        color: '#2563eb', // Azul corporativo para la SMA
+        lineWidth: 2,
+        crosshairMarkerVisible: false,
+        lastValueVisible: false,
+        priceLineVisible: false
     });
 
     // Handle resize
@@ -151,23 +160,111 @@ async function handleSearch() {
     document.getElementById('trade-ticker-label').innerText = ticker;
     
     document.getElementById('chart-loader').classList.remove('hidden');
+    
+    // Mostrar paneles e iniciar carga
+    document.getElementById('info-panel').classList.remove('hidden');
+    document.getElementById('news-panel').classList.remove('hidden');
+    document.getElementById('info-sector').innerText = '...';
+    document.getElementById('info-industry').innerText = '...';
+    document.getElementById('info-mcap').innerText = '...';
+    document.getElementById('info-pe').innerText = '...';
+    document.getElementById('info-rec').innerText = '...';
+    document.getElementById('news-list').innerHTML = '<div class="text-muted">Cargando noticias...</div>';
+
     lineSeries.setData([]);
+    smaSeries.setData([]);
 
     try {
         const res = await fetch(`/api/chart/${ticker}`);
         const data = await res.json();
         
         if (res.ok) {
+            // Mapear datos de velas
             lineSeries.setData(data);
+            
+            // Mapear datos de SMA
+            const smaData = data.filter(d => d.sma20 !== null).map(d => ({
+                time: d.time,
+                value: d.sma20
+            }));
+            smaSeries.setData(smaData);
+            
             chart.timeScale().fitContent();
         } else {
             showToast(data.error || 'Error cargando gráfico', 'error');
             document.getElementById('asset-title').innerText = 'Activo no encontrado';
+            document.getElementById('info-panel').classList.add('hidden');
+            document.getElementById('news-panel').classList.add('hidden');
+            return;
         }
     } catch (e) {
-        showToast('Error de conexión', 'error');
+        showToast('Error de conexión con gráfico', 'error');
     } finally {
         document.getElementById('chart-loader').classList.add('hidden');
+    }
+
+    // Cargar info y noticias en paralelo
+    loadAssetInfo(ticker);
+    loadAssetNews(ticker);
+}
+
+async function loadAssetInfo(ticker) {
+    try {
+        const res = await fetch(`/api/info/${ticker}`);
+        if(res.ok) {
+            const info = await res.json();
+            document.getElementById('info-sector').innerText = info.sector || 'N/A';
+            document.getElementById('info-industry').innerText = info.industry || 'N/A';
+            
+            // Formatear Market Cap
+            let mcap = info.marketCap || 0;
+            if(mcap > 1e12) mcap = (mcap / 1e12).toFixed(2) + ' T';
+            else if(mcap > 1e9) mcap = (mcap / 1e9).toFixed(2) + ' B';
+            else if(mcap > 1e6) mcap = (mcap / 1e6).toFixed(2) + ' M';
+            
+            document.getElementById('info-mcap').innerText = `$${mcap}`;
+            document.getElementById('info-pe').innerText = info.trailingPE ? info.trailingPE.toFixed(2) : 'N/A';
+            
+            const recLabel = document.getElementById('info-rec');
+            recLabel.innerText = info.recommendation;
+            
+            if(['buy', 'strong_buy'].includes(info.recommendation)) recLabel.style.color = 'var(--accent-buy)';
+            else if(['sell', 'strong_sell'].includes(info.recommendation)) recLabel.style.color = 'var(--accent-sell)';
+            else recLabel.style.color = 'var(--text-secondary)';
+            
+            document.getElementById('asset-title').innerText = `${ticker} - ${info.longName}`;
+        }
+    } catch(e) {
+        console.error("Error info", e);
+    }
+}
+
+async function loadAssetNews(ticker) {
+    try {
+        const res = await fetch(`/api/news/${ticker}`);
+        if(res.ok) {
+            const news = await res.json();
+            const container = document.getElementById('news-list');
+            container.innerHTML = '';
+            
+            if(news.length === 0) {
+                container.innerHTML = '<div class="text-muted">No hay noticias recientes.</div>';
+                return;
+            }
+            
+            news.forEach(n => {
+                const date = new Date(n.time * 1000).toLocaleDateString();
+                const div = document.createElement('div');
+                div.className = 'news-item';
+                div.innerHTML = `
+                    <a href="${n.link}" target="_blank">${n.title}</a>
+                    <div class="news-meta">${n.publisher} • ${date}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+    } catch(e) {
+        console.error("Error news", e);
     }
 }
 

@@ -34,15 +34,20 @@ def get_chart(ticker):
         if hist.empty:
             return jsonify({'error': 'No hay datos para este ticker'}), 404
             
+        # Calcular SMA 20 (Simple Moving Average de 20 días)
+        hist['SMA20'] = hist['Close'].rolling(window=20).mean()
+            
         # Formatear para Lightweight Charts (time, open, high, low, close)
         data = []
         for index, row in hist.iterrows():
+            sma = row['SMA20']
             data.append({
                 'time': index.strftime('%Y-%m-%d'),
                 'open': row['Open'],
                 'high': row['High'],
                 'low': row['Low'],
-                'close': row['Close']
+                'close': row['Close'],
+                'sma20': sma if not str(sma) == 'nan' else None
             })
         return jsonify(data)
     except Exception as e:
@@ -85,6 +90,42 @@ def get_tickers():
                 })
             except Exception:
                 pass
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/info/<ticker>', methods=['GET'])
+def get_info(ticker):
+    try:
+        stock = yf.Ticker(ticker)
+        # fast_info es mas rapido si existe, sino caemos a info
+        info = stock.info
+        
+        return jsonify({
+            'sector': info.get('sector', 'Desconocido'),
+            'industry': info.get('industry', 'Desconocido'),
+            'marketCap': info.get('marketCap', 0),
+            'trailingPE': info.get('trailingPE', 0),
+            'dividendYield': info.get('dividendYield', 0),
+            'recommendation': info.get('recommendationKey', 'none'),
+            'longName': info.get('longName', ticker)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/news/<ticker>', methods=['GET'])
+def get_news(ticker):
+    try:
+        stock = yf.Ticker(ticker)
+        noticias = stock.news
+        result = []
+        for n in noticias[:5]: # Solo ultimas 5
+            result.append({
+                'title': n.get('title'),
+                'link': n.get('link'),
+                'publisher': n.get('publisher'),
+                'time': n.get('providerPublishTime')
+            })
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

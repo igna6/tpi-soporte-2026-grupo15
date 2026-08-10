@@ -65,26 +65,46 @@
                 <div id="chart-loader" class="loader hidden">Cargando datos...</div>
             </div>
 
-            <div class="trade-panel glass-panel">
-                <div class="trade-info">
-                    <h3>Operar <span id="trade-ticker-label">...</span></h3>
-                    <p class="text-muted">Ingrese la cantidad de acciones a transaccionar al precio actual de mercado.</p>
-                </div>
-                <div class="trade-controls">
-                    <div class="input-group">
-                        <label>Cantidad</label>
-                        <input type="number" id="trade-qty" min="0.1" step="0.1" placeholder="0.00">
+            <div class="bottom-panels">
+                <div class="trade-panel glass-panel">
+                    <div class="trade-info">
+                        <h3>Operar <span id="trade-ticker-label">...</span></h3>
+                        <p class="text-muted">Ingrese la cantidad de acciones a transaccionar al precio actual de mercado.</p>
                     </div>
-                    <div class="action-buttons">
-                        <button id="btn-buy" class="btn-buy">COMPRAR</button>
-                        <button id="btn-sell" class="btn-sell">VENDER</button>
+                    <div class="trade-controls">
+                        <div class="input-group">
+                            <label>Cantidad</label>
+                            <input type="number" id="trade-qty" min="0.1" step="0.1" placeholder="0.00">
+                        </div>
+                        <div class="action-buttons">
+                            <button id="btn-buy" class="btn-buy">COMPRAR</button>
+                            <button id="btn-sell" class="btn-sell">VENDER</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-panel glass-panel hidden" id="info-panel">
+                    <h3>Perfil de Empresa</h3>
+                    <div class="info-grid">
+                        <div class="info-item"><span>Sector:</span> <strong id="info-sector">-</strong></div>
+                        <div class="info-item"><span>Industria:</span> <strong id="info-industry">-</strong></div>
+                        <div class="info-item"><span>Market Cap:</span> <strong id="info-mcap">-</strong></div>
+                        <div class="info-item"><span>P/E Ratio:</span> <strong id="info-pe">-</strong></div>
+                        <div class="info-item"><span>Recomendación:</span> <strong id="info-rec" class="rec-badge">-</strong></div>
+                    </div>
+                </div>
+
+                <div class="news-panel glass-panel hidden" id="news-panel">
+                    <h3>Últimas Noticias</h3>
+                    <div class="news-list" id="news-list">
+                        <!-- JS inyecta noticias aqui -->
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Forzar recarga de caché con ?v=3 -->
-    <script src="/static/app.js?v=3"></script>
+    <!-- Forzar recarga de caché con ?v=4 -->
+    <script src="/static/app.js?v=4"></script>
 </body>
 </html>
