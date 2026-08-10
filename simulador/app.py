@@ -220,6 +220,12 @@ def roi_chart():
         ax.set_title('Evolución de Patrimonio', fontsize=14, color='#1e293b', pad=10)
         ax.set_ylabel('USD', fontsize=10)
         
+        # Formatear eje Y con separador de miles y signo $
+        from matplotlib.ticker import FuncFormatter
+        def currency_formatter(x, pos):
+            return f'${x:,.0f}'
+        ax.yaxis.set_major_formatter(FuncFormatter(currency_formatter))
+        
         plt.xticks(rotation=30, ha='right', fontsize=8)
         plt.yticks(fontsize=9)
         ax.grid(True, linestyle='--', alpha=0.5)
