@@ -12,6 +12,7 @@ El alcance de este proyecto es desarrollar un **Simulador de Inversiones** inter
 
 **Objetivos principales:**
 * **Cotizaciones Reales:** Conectarse automáticamente a internet mediante la API de Yahoo Finance para consultar el valor exacto de las acciones al momento de la operación.
+* **Análisis Fundamental (Research):** Proveer información detallada del perfil de la empresa (sector, industria) y las noticias financieras más recientes para que el usuario tome decisiones informadas.
 * **Experiencia de Usuario Interactiva:** Proveer una interfaz gráfica donde el usuario ingrese la abreviatura de la empresa (Ticker) y la cantidad, y el sistema calcule totales a pagar de forma automática.
 * **Validación de Operaciones:** Revisar que las transacciones cumplan con reglas financieras lógicas (fondos, tenencias, montos mínimos) antes de ser registradas.
 * **Gestión de Portafolio:** Almacenar las operaciones exitosas en una base de datos local y proveer una vista del historial de compras y el estado del portafolio virtual.
@@ -21,7 +22,7 @@ El alcance de este proyecto es desarrollar un **Simulador de Inversiones** inter
 
 ## Modelo de Dominio
 
-*(Nota: Reemplazar la ruta de la imagen con la ubicación real de tu diagrama exportado de draw.io)*
+*(Nota: Reemplazar la ruta de la imagen con la ubicación real de tu diagrama exportado de draw.io actualizado)*
 
 ![Modelo de Dominio](./images/modelo_dominio.png)
 
@@ -51,11 +52,13 @@ El sistema implementa una arquitectura estructurada lógicamente en 3 capas (Pre
 * **RF-05 | Consultar Historial de Transacciones:** El sistema debe proveer una vista donde el usuario pueda revisar el registro histórico de todas sus operaciones (compras y ventas), mostrando fecha, tipo de operación, Ticker, cantidad, precio de ejecución y monto total.
 * **RF-06 | Visualizar Saldo de Cuenta:** El sistema debe mantener visible en todo momento el saldo de dinero virtual (efectivo) que el usuario tiene disponible para realizar nuevas compras.
 * **RF-07 | Generación de Gráficos:** A partir de las inversiones realizadas, se podrán generar gráficos que muestren las ganancias o pérdidas del usuario en un determinado tiempo.
+* **RF-08 | Consultar Perfil del Activo:** El sistema debe permitir al usuario visualizar la información fundamental de la empresa seleccionada (sector, industria y descripción breve) obtenida a través de la API externa.
+* **RF-09 | Visualizar Noticias Relevantes:** El sistema debe mostrar los titulares de las noticias financieras más recientes asociadas al Ticker consultado, extraídas en tiempo real para apoyar la decisión de inversión.
 
 **Módulo 3: Validaciones del Sistema (Reglas de Negocio)**
-* **RF-08 | Validar Fondos Suficientes (RN-01):** Al intentar realizar una compra, el sistema debe impedir la transacción y mostrar un mensaje de error si el costo total (Precio Unitario x Cantidad) supera el saldo de cuenta disponible.
-* **RF-09 | Validar Tenencia Previa (RN-02):** Al intentar realizar una venta, el sistema debe impedir la transacción y mostrar un mensaje de error si el usuario intenta vender una cantidad mayor a la que posee en su portafolio.
-* **RF-10 | Validar Monto Mínimo (RN-03):** El sistema debe rechazar cualquier operación de compra cuyo monto total calculado sea inferior a $10.00 USD (o la moneda base definida), mostrando el aviso correspondiente para evitar micro-transacciones.
+* **RF-10 | Validar Fondos Suficientes (RN-01):** Al intentar realizar una compra, el sistema debe impedir la transacción y mostrar un mensaje de error si el costo total (Precio Unitario x Cantidad) supera el saldo de cuenta disponible.
+* **RF-11 | Validar Tenencia Previa (RN-02):** Al intentar realizar una venta, el sistema debe impedir la transacción y mostrar un mensaje de error si el usuario intenta vender una cantidad mayor a la que posee en su portafolio.
+* **RF-12 | Validar Monto Mínimo (RN-03):** El sistema debe rechazar cualquier operación de compra cuyo monto total calculado sea inferior a $10.00 USD (o la moneda base definida), mostrando el aviso correspondiente para evitar micro-transacciones.
 
 ---
 
@@ -83,7 +86,7 @@ El sistema implementa una arquitectura estructurada lógicamente en 3 capas (Pre
 * **Obligatorio:** El sistema debe funcionar en un equipo hogareño estándar.
 
 #### Reusability
-* La lógica de validación financiera (Capa de Negocio) debe estar completamente desacoplada de la interfaz gráfica para permitir su reutilización.
+* La lógica de validación financiera y consumo de APIs (Capa de Negocio) debe estar completamente desacoplada de la interfaz gráfica para permitir su reutilización.
 
 #### Flexibility
 * **Obligatorio:** El sistema debe utilizar una base de datos SQL o NoSQL.
@@ -94,12 +97,12 @@ El sistema implementa una arquitectura estructurada lógicamente en 3 capas (Pre
 
 ### Capa de Datos
 * **Tecnología:** Base de Datos SQL (SQLite) mediante la librería estándar `sqlite3` de Python.
-* **Justificación:** Se escogió SQLite porque es un motor relacional extremadamente ligero que guarda todos los datos en un archivo local `.db`. Esto cumple con el requerimiento de funcionar en un equipo hogareño estándar sin necesidad de configurar ni levantar servidores externos. Se utilizará el acceso directo mediante consultas SQL para garantizar un rendimiento óptimo.
+* **Justificación:** Se escogió SQLite porque es un motor relacional extremadamente ligero que guarda todos los datos en un archivo local `.db`. Esto cumple con el requerimiento de funcionar en un equipo hogareño estándar sin necesidad de configurar ni levantar servidores externos. Las noticias, al ser volátiles, no se persistirán, pero el catálogo de activos se enriquecerá con el perfil de cada empresa.
 
 ### Capa de Negocio
 * **Tecnología:** Python (Core).
 * **Librerías / APIs:** Librería externa `yfinance`.
-* **Justificación:** Se utilizó `yfinance` porque provee un puente directo, estable y gratuito hacia la API de Yahoo Finance. Permite descargar datos de mercado en tiempo real devolviendo estructuras de datos fáciles de procesar en Python, lo que facilita y agiliza la validación de cotizaciones sin exponer credenciales ni gestionar tokens de autenticación complejos.
+* **Justificación:** Se utilizó `yfinance` porque provee un puente directo, estable y gratuito hacia la API de Yahoo Finance. Permite descargar datos de mercado en tiempo real, así como extraer el perfil corporativo (`info`) y los titulares de noticias (`news`) devolviendo estructuras de datos fáciles de procesar en Python, agilizando el desarrollo sin exponer credenciales ni gestionar tokens de autenticación complejos.
 
 ### Capa de Presentación
 * **Tecnología:** Framework `Tkinter` y librería `Matplotlib`.
