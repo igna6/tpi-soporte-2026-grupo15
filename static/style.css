@@ -1,0 +1,361 @@
+:root {
+    /* Paleta Corporativa / Seria (Light Mode) */
+    --bg-color: #f1f5f9;
+    --panel-bg: #ffffff;
+    --panel-border: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    
+    /* Colores Financieros Clásicos */
+    --accent-buy: #16a34a; /* Verde institucional */
+    --accent-buy-hover: #15803d;
+    --accent-sell: #dc2626; /* Rojo institucional */
+    --accent-sell-hover: #b91c1c;
+    
+    --primary: #1e293b; /* Azul/Gris oscuro corporativo */
+    --primary-hover: #334155;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.layout {
+    display: flex;
+    height: 100vh;
+    padding: 1.5rem;
+    gap: 1.5rem;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* Paneles sólidos y limpios */
+.glass-panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Sidebar */
+.sidebar {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    gap: 2rem;
+}
+
+.logo {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--primary);
+}
+.logo span {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.saldo-card {
+    background: var(--primary);
+    padding: 1.5rem;
+    border-radius: 8px;
+    color: #ffffff;
+    box-shadow: 0 10px 15px -3px rgba(30, 41, 59, 0.1);
+}
+
+.saldo-card h2 {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.saldo-monto {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.portfolio-section h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--bg-color);
+    color: var(--text-primary);
+}
+
+.table-container {
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 0.75rem 0.5rem;
+    text-align: left;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--panel-border);
+}
+
+th {
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+td strong {
+    color: var(--text-primary);
+}
+
+/* Market Section */
+.market-section h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--bg-color);
+}
+
+.market-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+    max-height: 250px;
+}
+
+.ticker-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: 1px solid transparent;
+}
+
+.ticker-item:hover {
+    background: #f1f5f9;
+    border-color: var(--panel-border);
+}
+
+.ticker-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.ticker-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.ticker-price .val {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.ticker-price .pct {
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.pct.up { color: var(--accent-buy); }
+.pct.down { color: var(--accent-sell); }
+
+/* Main Content */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-box {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-box input {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    width: 250px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.search-box input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(30, 41, 59, 0.1);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-primary:hover { background: var(--primary-hover); }
+
+.current-asset h2 {
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+/* Chart */
+.chart-container {
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden;
+    padding: 1rem;
+}
+
+.loader {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.9rem;
+    z-index: 10;
+}
+.hidden { display: none !important; }
+
+/* Trade Panel */
+.trade-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+}
+
+.trade-info h3 { 
+    margin-bottom: 0.25rem; 
+    font-size: 1.1rem;
+    color: var(--text-primary); 
+}
+.text-muted { color: var(--text-secondary); font-size: 0.85rem; }
+
+.trade-controls {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.input-group label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.input-group input {
+    background: #f8fafc;
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    padding: 0.75rem;
+    border-radius: 6px;
+    width: 140px;
+    font-size: 1rem;
+    outline: none;
+    text-align: right;
+}
+.input-group input:focus {
+    border-color: var(--primary);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.action-buttons button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: white;
+    transition: background 0.2s;
+}
+
+.btn-buy { background: var(--accent-buy); }
+.btn-buy:hover { background: var(--accent-buy-hover); }
+
+.btn-sell { background: var(--accent-sell); }
+.btn-sell:hover { background: var(--accent-sell-hover); }
+
+/* Toasts */
+#toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.toast {
+    background: #ffffff;
+    border: 1px solid var(--panel-border);
+    border-left: 4px solid var(--primary);
+    color: var(--text-primary);
+    padding: 1rem 1.25rem;
+    border-radius: 6px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    animation: slideIn 0.3s forwards, fadeOut 0.5s 4.5s forwards;
+    max-width: 350px;
+    font-size: 0.9rem;
+}
+.toast.error { border-left-color: var(--accent-sell); }
+.toast.success { border-left-color: var(--accent-buy); }
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
