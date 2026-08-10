@@ -60,6 +60,19 @@ def inicializar_db():
             FOREIGN KEY (ticker_activo) REFERENCES ActivoFinanciero(ticker)
         )
     ''')
+
+    # Tabla HistorialPatrimonio
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS HistorialPatrimonio (
+            id_historial INTEGER PRIMARY KEY AUTOINCREMENT,
+            id_inversor INTEGER NOT NULL,
+            fecha TEXT NOT NULL,
+            saldo_efectivo REAL NOT NULL,
+            valor_acciones REAL NOT NULL,
+            total_patrimonio REAL NOT NULL,
+            FOREIGN KEY (id_inversor) REFERENCES Inversor(id_inversor)
+        )
+    ''')
     
     # Crear un inversor por defecto si la tabla está vacía
     cursor.execute('SELECT COUNT(*) FROM Inversor')
@@ -69,6 +82,22 @@ def inicializar_db():
             INSERT INTO Inversor (nombre_usuario, saldo_efectivo, fecha_creacion)
             VALUES (?, ?, ?)
         ''', ('Usuario_Demo', 10000.0, fecha_actual))
+
+    # Crear historial ficticio si está vacío
+    cursor.execute('SELECT COUNT(*) FROM HistorialPatrimonio')
+    if cursor.fetchone()[0] == 0:
+        import datetime as dt
+        import random
+        base_date = datetime.now() - dt.timedelta(days=10)
+        patrimonio = 10000.0
+        for i in range(10):
+            d = base_date + dt.timedelta(days=i)
+            # Simulamos fluctuaciones
+            patrimonio *= random.uniform(0.98, 1.03)
+            cursor.execute('''
+                INSERT INTO HistorialPatrimonio (id_inversor, fecha, saldo_efectivo, valor_acciones, total_patrimonio)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (1, d.strftime('%Y-%m-%d'), patrimonio*0.5, patrimonio*0.5, patrimonio))
 
     conn.commit()
     conn.close()
@@ -144,6 +173,35 @@ def registrar_transaccion(id_inversor: int, ticker: str, tipo_operacion: str, ca
     ''', (id_inversor, ticker, tipo_operacion, cantidad, precio_unitario, fecha_hora))
     conn.commit()
     conn.close()
+
+def registrar_patrimonio_diario(id_inversor: int, saldo_efectivo: float, valor_acciones: float, total_patrimonio: float, fecha: str):
+    conn = get_connection()
+    cursor = conn.cursor()
+    # Si ya existe un registro para esta fecha, lo actualizamos
+    cursor.execute('SELECT id_historial FROM HistorialPatrimonio WHERE id_inversor = ? AND fecha = ?', (id_inversor, fecha))
+    row = cursor.fetchone()
+    if row:
+        cursor.execute('''
+            UPDATE HistorialPatrimonio 
+            SET saldo_efectivo = ?, valor_acciones = ?, total_patrimonio = ?
+            WHERE id_historial = ?
+        ''', (saldo_efectivo, valor_acciones, total_patrimonio, row[0]))
+    else:
+        cursor.execute('''
+            INSERT INTO HistorialPatrimonio (id_inversor, fecha, saldo_efectivo, valor_acciones, total_patrimonio)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (id_inversor, fecha, saldo_efectivo, valor_acciones, total_patrimonio))
+    conn.commit()
+    conn.close()
+
+def obtener_historial_patrimonio(id_inversor: int) -> list:
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM HistorialPatrimonio WHERE id_inversor = ? ORDER BY fecha ASC', (id_inversor,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
     
 def asegurar_activo(ticker: str, nombre_empresa: str = "N/A", tipo_activo: str = "ACCION"):
     conn = get_connection()

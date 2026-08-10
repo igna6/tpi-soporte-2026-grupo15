@@ -340,21 +340,23 @@ td strong {
     flex-direction: column;
     gap: 0.25rem;
 }
+
 .input-group label {
     font-size: 0.75rem;
     color: var(--text-secondary);
-    font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
 }
-.input-group input {
-    background: #f8fafc;
+
+.trade-controls input {
+    padding: 0.5rem;
     border: 1px solid var(--panel-border);
-    color: var(--text-primary);
-    padding: 0.75rem;
     border-radius: 6px;
+    background: var(--bg-color);
+    color: var(--text-primary);
     width: 140px;
     font-size: 1rem;
-    outline: none;
     text-align: right;
 }
 .input-group input:focus {

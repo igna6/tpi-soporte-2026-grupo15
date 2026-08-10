@@ -20,6 +20,7 @@
             <div class="saldo-card">
                 <h2>Saldo Disponible</h2>
                 <div id="saldo-value" class="saldo-monto">$0.00</div>
+                <button id="btn-roi" class="btn-primary" style="margin-top: 10px; width: 100%; padding: 0.5rem; font-size: 0.85rem;">Ver Rendimiento Histórico</button>
             </div>
 
             <div class="portfolio-section">
@@ -104,7 +105,21 @@
         </main>
     </div>
 
-    <!-- Forzar recarga de caché con ?v=5 -->
-    <script src="/static/app.js?v=5"></script>
+    <!-- ROI Modal -->
+    <div id="roi-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>Rendimiento Histórico</h2>
+                <span id="roi-close" class="close">&times;</span>
+            </div>
+            <div class="roi-image-container">
+                <div id="roi-loader" class="loader">Generando gráfico con matplotlib...</div>
+                <img id="roi-image" src="" alt="ROI Chart" class="hidden">
+            </div>
+        </div>
+    </div>
+
+    <!-- Forzar recarga de caché con ?v=6 -->
+    <script src="/static/app.js?v=6"></script>
 </body>
 </html>

@@ -194,5 +194,48 @@ def vender():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/roi_chart.png')
+def roi_chart():
+    try:
+        # Registrar valor actual antes de graficar
+        gestor.calcular_y_registrar_patrimonio()
+        
+        from capa_datos import database
+        historial = database.obtener_historial_patrimonio(1)
+        if not historial:
+            return jsonify({'error': 'No hay datos'}), 404
+            
+        import io
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        
+        fechas = [row['fecha'] for row in historial]
+        valores = [row['total_patrimonio'] for row in historial]
+        
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.plot(fechas, valores, marker='o', color='#2563eb', linewidth=2)
+        ax.fill_between(fechas, valores, color='#2563eb', alpha=0.1)
+        
+        ax.set_title('Evolución de Patrimonio', fontsize=14, color='#1e293b', pad=10)
+        ax.set_ylabel('USD', fontsize=10)
+        
+        plt.xticks(rotation=30, ha='right', fontsize=8)
+        plt.yticks(fontsize=9)
+        ax.grid(True, linestyle='--', alpha=0.5)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        
+        plt.tight_layout()
+        img = io.BytesIO()
+        plt.savefig(img, format='png', dpi=100, bbox_inches='tight')
+        img.seek(0)
+        plt.close(fig)
+        
+        from flask import send_file
+        return send_file(img, mimetype='image/png')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -176,3 +176,54 @@ class GestorInversiones:
                 database.guardar_posicion(self.inversor.id_inversor, ticker, pos.cant_actual, pos.prec_prom_compra)
 
         return transaccion
+
+    def calcular_y_registrar_patrimonio(self):
+        """Calcula el valor de mercado actual de todas las posiciones + efectivo y lo registra."""
+        if not self.inversor or not self.usar_db:
+            return
+
+        import yfinance as yf
+        from datetime import datetime
+        
+        valor_acciones = 0.0
+        
+        if self.posiciones:
+            # Obtener todos los tickers
+            tickers = list(self.posiciones.keys())
+            try:
+                # Descarga masiva para ser más rápido
+                data = yf.download(tickers, period="1d", group_by="ticker", progress=False)
+                for ticker, pos in self.posiciones.items():
+                    try:
+                        # Extraer precio de cierre más reciente
+                        if len(tickers) == 1:
+                            precio_actual = float(data['Close'].iloc[-1])
+                        else:
+                            if ticker in data:
+                                df = data[ticker]['Close'].dropna()
+                            else:
+                                df = data['Close'][ticker].dropna() if 'Close' in data else []
+                                
+                            if len(df) > 0:
+                                precio_actual = float(df.iloc[-1])
+                            else:
+                                precio_actual = pos.prec_prom_compra # fallback
+                                
+                        valor_acciones += precio_actual * pos.cant_actual
+                    except Exception:
+                        valor_acciones += pos.prec_prom_compra * pos.cant_actual
+            except Exception as e:
+                # Fallback si falla yfinance masivo
+                for ticker, pos in self.posiciones.items():
+                    valor_acciones += pos.prec_prom_compra * pos.cant_actual
+                    
+        total_patrimonio = self.inversor.saldo_efectivo + valor_acciones
+        fecha_hoy = datetime.now().strftime('%Y-%m-%d')
+        
+        database.registrar_patrimonio_diario(
+            self.inversor.id_inversor,
+            self.inversor.saldo_efectivo,
+            valor_acciones,
+            total_patrimonio,
+            fecha_hoy
+        )

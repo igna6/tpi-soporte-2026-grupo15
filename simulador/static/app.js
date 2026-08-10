@@ -38,7 +38,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-buy').addEventListener('click', () => handleTrade('comprar'));
     document.getElementById('btn-sell').addEventListener('click', () => handleTrade('vender'));
+
+    // Eventos del ROI
+    document.getElementById('btn-roi').addEventListener('click', loadROIChart);
+    document.getElementById('roi-close').addEventListener('click', () => {
+        document.getElementById('roi-modal').classList.add('hidden');
+    });
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('roi-modal');
+        if (e.target === modal) modal.classList.add('hidden');
+    });
 });
+
+function loadROIChart() {
+    const modal = document.getElementById('roi-modal');
+    const img = document.getElementById('roi-image');
+    const loader = document.getElementById('roi-loader');
+    
+    modal.classList.remove('hidden');
+    img.classList.add('hidden');
+    loader.classList.remove('hidden');
+    
+    // El timestamp previene que el navegador use caché para la imagen
+    img.src = `/api/roi_chart.png?t=${new Date().getTime()}`;
+    
+    img.onload = () => {
+        loader.classList.add('hidden');
+        img.classList.remove('hidden');
+    };
+    
+    img.onerror = () => {
+        loader.classList.add('hidden');
+        showToast("Error al cargar gráfico de ROI.", "error");
+        modal.classList.add('hidden');
+    };
+}
 
 function initChart() {
     const chartContainer = document.getElementById('tvchart');
