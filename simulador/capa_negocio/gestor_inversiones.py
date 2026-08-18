@@ -196,18 +196,15 @@ class GestorInversiones:
                 for ticker, pos in self.posiciones.items():
                     try:
                         # Extraer precio de cierre más reciente
-                        if len(tickers) == 1:
-                            precio_actual = float(data['Close'].iloc[-1])
+                        if ticker in data:
+                            df = data[ticker]['Close'].dropna()
                         else:
-                            if ticker in data:
-                                df = data[ticker]['Close'].dropna()
-                            else:
-                                df = data['Close'][ticker].dropna() if 'Close' in data else []
-                                
-                            if len(df) > 0:
-                                precio_actual = float(df.iloc[-1])
-                            else:
-                                precio_actual = pos.prec_prom_compra # fallback
+                            df = data['Close'][ticker].dropna() if 'Close' in data else []
+                            
+                        if len(df) > 0:
+                            precio_actual = float(df.iloc[-1])
+                        else:
+                            precio_actual = pos.prec_prom_compra # fallback
                                 
                         valor_acciones += precio_actual * pos.cant_actual
                     except Exception:

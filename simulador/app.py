@@ -20,16 +20,13 @@ def get_portfolio():
     if tickers:
         try:
             data = yf.download(tickers, period="1d", group_by="ticker", progress=False)
-            if len(tickers) == 1:
-                current_prices[tickers[0]] = float(data['Close'].iloc[-1])
-            else:
-                for ticker in tickers:
-                    if ticker in data:
-                        df = data[ticker]['Close'].dropna()
-                    else:
-                        df = data['Close'][ticker].dropna() if 'Close' in data else []
-                    if len(df) > 0:
-                        current_prices[ticker] = float(df.iloc[-1])
+            for ticker in tickers:
+                if ticker in data:
+                    df = data[ticker]['Close'].dropna()
+                else:
+                    df = data['Close'][ticker].dropna() if 'Close' in data else []
+                if len(df) > 0:
+                    current_prices[ticker] = float(df.iloc[-1])
         except Exception:
             pass
 
