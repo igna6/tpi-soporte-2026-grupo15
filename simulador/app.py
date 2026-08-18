@@ -19,7 +19,7 @@ def get_portfolio():
     current_prices = {}
     if tickers:
         try:
-            data = yf.download(tickers, period="1d", group_by="ticker", progress=False)
+            data = yf.download(tickers, period="5d", group_by="ticker", progress=False)
             for ticker in tickers:
                 if ticker in data:
                     df = data[ticker]['Close'].dropna()

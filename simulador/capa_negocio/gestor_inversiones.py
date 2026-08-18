@@ -192,7 +192,7 @@ class GestorInversiones:
             tickers = list(self.posiciones.keys())
             try:
                 # Descarga masiva para ser más rápido
-                data = yf.download(tickers, period="1d", group_by="ticker", progress=False)
+                data = yf.download(tickers, period="5d", group_by="ticker", progress=False)
                 for ticker, pos in self.posiciones.items():
                     try:
                         # Extraer precio de cierre más reciente
