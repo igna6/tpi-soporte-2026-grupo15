@@ -14,12 +14,41 @@ def index():
 def get_portfolio():
     saldo = gestor.inversor.saldo_efectivo if gestor.inversor else 0.0
     posiciones = []
+    
+    tickers = list(gestor.posiciones.keys())
+    current_prices = {}
+    if tickers:
+        try:
+            data = yf.download(tickers, period="1d", group_by="ticker", progress=False)
+            if len(tickers) == 1:
+                current_prices[tickers[0]] = float(data['Close'].iloc[-1])
+            else:
+                for ticker in tickers:
+                    if ticker in data:
+                        df = data[ticker]['Close'].dropna()
+                    else:
+                        df = data['Close'][ticker].dropna() if 'Close' in data else []
+                    if len(df) > 0:
+                        current_prices[ticker] = float(df.iloc[-1])
+        except Exception:
+            pass
+
     for ticker, pos in gestor.posiciones.items():
+        precio_actual = current_prices.get(ticker, pos.prec_prom_compra)
+        pnl_pct = 0.0
+        if pos.prec_prom_compra > 0:
+            pnl_pct = ((precio_actual - pos.prec_prom_compra) / pos.prec_prom_compra) * 100
+        pnl_abs = (precio_actual - pos.prec_prom_compra) * pos.cant_actual
+
         posiciones.append({
             'ticker': ticker,
             'cantidad': pos.cant_actual,
-            'precio_promedio': pos.prec_prom_compra
+            'precio_promedio': pos.prec_prom_compra,
+            'precio_actual': precio_actual,
+            'pnl_pct': pnl_pct,
+            'pnl_abs': pnl_abs
         })
+        
     return jsonify({
         'saldo': saldo,
         'posiciones': posiciones

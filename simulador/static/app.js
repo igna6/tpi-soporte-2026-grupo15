@@ -136,11 +136,18 @@ async function loadPortfolio() {
         const tbody = document.getElementById('portfolio-body');
         tbody.innerHTML = '';
         data.posiciones.forEach(pos => {
+            const isUp = pos.pnl_pct >= 0;
+            const sign = isUp ? '+' : '';
+            const color = isUp ? 'var(--accent-buy)' : 'var(--accent-sell)';
+            
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${pos.ticker}</strong></td>
                 <td>${pos.cantidad.toFixed(2)}</td>
                 <td>$${pos.precio_promedio.toFixed(2)}</td>
+                <td style="color: ${color}; font-weight: 600;">
+                    ${sign}$${pos.pnl_abs.toFixed(2)} (${sign}${pos.pnl_pct.toFixed(2)}%)
+                </td>
             `;
             tbody.appendChild(tr);
         });
