@@ -86,8 +86,8 @@ def get_chart(ticker):
 def get_tickers():
     try:
         popular_tickers = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'NVDA']
-        # yf.download es mucho más rápido y no satura la API en comparacion a iterar Ticker
-        data = yf.download(popular_tickers, period="2d", group_by="ticker", progress=False)
+        # Usar 5d asegura que siempre tengamos al menos 2 días hábiles (evita bugs de fin de semana)
+        data = yf.download(popular_tickers, period="5d", group_by="ticker", progress=False)
         result = []
         
         for t in popular_tickers:
