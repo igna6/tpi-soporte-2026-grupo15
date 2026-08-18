@@ -50,28 +50,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function loadROIChart() {
+let roiChartObj = null;
+
+async function loadROIChart() {
     const modal = document.getElementById('roi-modal');
-    const img = document.getElementById('roi-image');
+    const container = document.getElementById('roi-chart-container');
     const loader = document.getElementById('roi-loader');
     
     modal.classList.remove('hidden');
-    img.classList.add('hidden');
     loader.classList.remove('hidden');
     
-    // El timestamp previene que el navegador use caché para la imagen
-    img.src = `/api/roi_chart.png?t=${new Date().getTime()}`;
-    
-    img.onload = () => {
+    try {
+        const res = await fetch('/api/roi_data');
+        const data = await res.json();
+        
         loader.classList.add('hidden');
-        img.classList.remove('hidden');
-    };
-    
-    img.onerror = () => {
+        
+        // Limpiar contenedor
+        container.innerHTML = '';
+        
+        if (data.length === 0) {
+            container.innerHTML = '<p>No hay datos suficientes para graficar.</p>';
+            return;
+        }
+
+        if (roiChartObj) {
+            roiChartObj.remove();
+        }
+
+        roiChartObj = LightweightCharts.createChart(container, {
+            width: container.clientWidth || 600,
+            height: 350,
+            layout: {
+                background: { type: 'solid', color: 'transparent' },
+                textColor: '#64748b',
+            },
+            grid: {
+                vertLines: { color: 'rgba(226, 232, 240, 0.5)' },
+                horzLines: { color: 'rgba(226, 232, 240, 0.5)' },
+            },
+            rightPriceScale: {
+                borderVisible: false,
+            },
+            timeScale: {
+                borderVisible: false,
+                timeVisible: true,
+            },
+        });
+
+        const areaSeries = roiChartObj.addAreaSeries({
+            lineColor: '#2563eb',
+            topColor: 'rgba(37, 99, 235, 0.4)',
+            bottomColor: 'rgba(37, 99, 235, 0.0)',
+            lineWidth: 2,
+        });
+
+        // Asegurarse de ordenar por fecha y ajustar el timezone si es necesario
+        // En nuestro caso, database devuelve YYYY-MM-DD lo cual LightweightCharts acepta
+        areaSeries.setData(data);
+        
+        roiChartObj.timeScale().fitContent();
+        
+    } catch (e) {
         loader.classList.add('hidden');
-        showToast("Error al cargar gráfico de ROI.", "error");
+        showToast("Error al cargar gráfico interactivo de ROI.", "error");
         modal.classList.add('hidden');
-    };
+    }
 }
 
 function initChart() {
