@@ -36,6 +36,14 @@ def get_portfolio():
         if pos.prec_prom_compra > 0:
             pnl_pct = ((precio_actual - pos.prec_prom_compra) / pos.prec_prom_compra) * 100
         pnl_abs = (precio_actual - pos.prec_prom_compra) * pos.cant_actual
+        
+        # Lógica de sugerencia de venta
+        if pnl_pct >= 5.0:
+            sugerencia = "VENDER (Ganancia)"
+        elif pnl_pct <= -3.0:
+            sugerencia = "VENDER (Stop Loss)"
+        else:
+            sugerencia = "MANTENER"
 
         posiciones.append({
             'ticker': ticker,
@@ -43,7 +51,8 @@ def get_portfolio():
             'precio_promedio': pos.prec_prom_compra,
             'precio_actual': precio_actual,
             'pnl_pct': pnl_pct,
-            'pnl_abs': pnl_abs
+            'pnl_abs': pnl_abs,
+            'sugerencia': sugerencia
         })
         
     return jsonify({

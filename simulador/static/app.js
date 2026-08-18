@@ -184,6 +184,10 @@ async function loadPortfolio() {
             const sign = isUp ? '+' : '';
             const color = isUp ? 'var(--accent-buy)' : 'var(--accent-sell)';
             
+            let sugColor = 'var(--text-secondary)';
+            if (pos.sugerencia.includes('Ganancia')) sugColor = 'var(--accent-buy)';
+            if (pos.sugerencia.includes('Stop Loss')) sugColor = 'var(--accent-sell)';
+            
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${pos.ticker}</strong></td>
@@ -191,6 +195,9 @@ async function loadPortfolio() {
                 <td>$${pos.precio_promedio.toFixed(2)}</td>
                 <td style="color: ${color}; font-weight: 600;">
                     ${sign}$${pos.pnl_abs.toFixed(2)} (${sign}${pos.pnl_pct.toFixed(2)}%)
+                </td>
+                <td style="color: ${sugColor}; font-size: 0.8rem; font-weight: 600;">
+                    ${pos.sugerencia}
                 </td>
             `;
             tbody.appendChild(tr);
