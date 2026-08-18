@@ -295,9 +295,38 @@ async function handleSearch() {
         document.getElementById('chart-loader').classList.add('hidden');
     }
 
-    // Cargar info y noticias en paralelo
+    // Cargar info, noticias y presión de mercado en paralelo
     loadAssetInfo(ticker);
     loadAssetNews(ticker);
+    loadMarketPressure(ticker);
+}
+
+async function loadMarketPressure(ticker) {
+    const container = document.getElementById('pressure-container');
+    const bidBar = document.getElementById('pressure-bid');
+    const askBar = document.getElementById('pressure-ask');
+    const bidLabel = document.getElementById('bid-size-label');
+    const askLabel = document.getElementById('ask-size-label');
+    
+    container.style.display = 'none'; // ocultar por defecto
+    
+    try {
+        const res = await fetch(`/api/market_pressure/${ticker}`);
+        if(res.ok) {
+            const data = await res.json();
+            if(data.error) return;
+            
+            container.style.display = 'block';
+            
+            bidBar.style.width = `${data.bidPct}%`;
+            askBar.style.width = `${data.askPct}%`;
+            
+            bidLabel.innerText = `${data.bidPct.toFixed(1)}%`;
+            askLabel.innerText = `${data.askPct.toFixed(1)}%`;
+        }
+    } catch (e) {
+        // Falló silenciosamente
+    }
 }
 
 async function loadAssetInfo(ticker) {

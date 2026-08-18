@@ -84,6 +84,21 @@
                             <button id="btn-sell" class="btn-sell">VENDER</button>
                         </div>
                     </div>
+                    
+                    <div class="market-pressure-container" style="margin-top: 1.5rem; display: none;" id="pressure-container">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.4rem;">
+                            <span>Fuerza Compradora (Bid)</span>
+                            <span>Fuerza Vendedora (Ask)</span>
+                        </div>
+                        <div class="pressure-bar" style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #334155;">
+                            <div id="pressure-bid" style="width: 50%; background: var(--accent-buy); transition: width 0.8s ease-out;"></div>
+                            <div id="pressure-ask" style="width: 50%; background: var(--accent-sell); transition: width 0.8s ease-out;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 0.25rem;">
+                            <span id="bid-size-label" style="color: var(--accent-buy); font-weight: bold;">--%</span>
+                            <span id="ask-size-label" style="color: var(--accent-sell); font-weight: bold;">--%</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="info-panel glass-panel hidden" id="info-panel">
@@ -120,7 +135,7 @@
         </div>
     </div>
 
-    <!-- Forzar recarga de caché con ?v=9 -->
-    <script src="/static/app.js?v=9"></script>
+    <!-- Forzar recarga de caché con ?v=10 -->
+    <script src="/static/app.js?v=10"></script>
 </body>
 </html>
