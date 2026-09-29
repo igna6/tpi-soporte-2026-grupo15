@@ -74,6 +74,19 @@ def inicializar_db():
         )
     ''')
     
+    # Tabla Watchlist
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS Watchlist (
+            id_watchlist INTEGER PRIMARY KEY AUTOINCREMENT,
+            id_inversor INTEGER NOT NULL,
+            ticker_activo TEXT NOT NULL,
+            fecha_agregado TEXT NOT NULL,
+            FOREIGN KEY (id_inversor) REFERENCES Inversor(id_inversor),
+            FOREIGN KEY (ticker_activo) REFERENCES ActivoFinanciero(ticker),
+            UNIQUE(id_inversor, ticker_activo)
+        )
+    ''')
+    
     # Crear un inversor por defecto si la tabla está vacía
     cursor.execute('SELECT COUNT(*) FROM Inversor')
     if cursor.fetchone()[0] == 0:
@@ -214,3 +227,35 @@ def asegurar_activo(ticker: str, nombre_empresa: str = "N/A", tipo_activo: str =
         ''', (ticker, nombre_empresa, tipo_activo))
     conn.commit()
     conn.close()
+
+def agregar_a_watchlist(id_inversor: int, ticker: str):
+    asegurar_activo(ticker)
+    conn = get_connection()
+    cursor = conn.cursor()
+    fecha = datetime.now().isoformat()
+    try:
+        cursor.execute('''
+            INSERT INTO Watchlist (id_inversor, ticker_activo, fecha_agregado)
+            VALUES (?, ?, ?)
+        ''', (id_inversor, ticker, fecha))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        pass # Ya estaba
+    conn.close()
+
+def eliminar_de_watchlist(id_inversor: int, ticker: str):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM Watchlist WHERE id_inversor = ? AND ticker_activo = ?', (id_inversor, ticker))
+    conn.commit()
+    conn.close()
+
+def obtener_watchlist(id_inversor: int) -> list:
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute('SELECT ticker_activo FROM Watchlist WHERE id_inversor = ?', (id_inversor,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [r['ticker_activo'] for r in rows]
+

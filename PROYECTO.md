@@ -50,18 +50,20 @@ El sistema implementa una arquitectura estructurada lógicamente en 3 capas (Pre
 * **RF-07 | Generación de Gráficos:** A partir de las inversiones realizadas, se podrán generar gráficos que muestren las ganancias o pérdidas del usuario en un determinado tiempo.
 * **RF-08 | Consultar Perfil del Activo:** El sistema debe permitir al usuario visualizar la información fundamental de la empresa seleccionada (sector, industria y descripción breve) obtenida a través de la API externa.
 * **RF-09 | Visualizar Noticias Relevantes:** El sistema debe mostrar los titulares de las noticias financieras más recientes asociadas al Ticker consultado, extraídas en tiempo real para apoyar la decisión de inversión.
+* **RF-10 | Watchlist (Lista de Seguimiento):** El sistema debe permitir al usuario marcar acciones como "favoritas" y proveer una vista rápida de las cotizaciones en tiempo real de esta lista, sin necesidad de realizar una búsqueda manual.
+* **RF-11 | Comparativa con Índice (Benchmark):** Al generar gráficos de rendimiento, el sistema debe mostrar opcionalmente una curva comparativa con el índice S&P 500 (Ticker: SPY) para evaluar el desempeño de las inversiones contra el mercado.
 
 **Módulo 3: Validaciones del Sistema (Reglas de Negocio)**
-* **RF-10 | Validar Fondos Suficientes (RN-01):** Al intentar realizar una compra, el sistema debe impedir la transacción y mostrar un mensaje de error si el costo total (Precio Unitario x Cantidad) supera el saldo de cuenta disponible.
-* **RF-11 | Validar Tenencia Previa (RN-02):** Al intentar realizar una venta, el sistema debe impedir la transacción y mostrar un mensaje de error si el usuario intenta vender una cantidad mayor a la que posee en su portafolio.
-* **RF-12 | Validar Monto Mínimo (RN-03):** El sistema debe rechazar cualquier operación de compra cuyo monto total calculado sea inferior a $10.00 USD (o la moneda base definida), mostrando el aviso correspondiente para evitar micro-transacciones.
+* **RF-12 | Validar Fondos Suficientes (RN-01):** Al intentar realizar una compra, el sistema debe impedir la transacción y mostrar un mensaje de error si el costo total (Precio Unitario x Cantidad) supera el saldo de cuenta disponible.
+* **RF-13 | Validar Tenencia Previa (RN-02):** Al intentar realizar una venta, el sistema debe impedir la transacción y mostrar un mensaje de error si el usuario intenta vender una cantidad mayor a la que posee en su portafolio.
+* **RF-14 | Validar Monto Mínimo (RN-03):** El sistema debe rechazar cualquier operación de compra cuyo monto total calculado sea inferior a $10.00 USD (o la moneda base definida), mostrando el aviso correspondiente para evitar micro-transacciones.
 
 ---
 
 ### No Funcionales
 
 #### Portability
-* **Obligatorio:** El sistema debe ejecutarse desde un único archivo `.py` llamado `app.py`.
+* **Obligatorio:** El sistema debe ejecutarse desde un único archivo `.py` llamado `app.py` que sirva como backend Web o aplicación de escritorio.
 
 #### Security
 * **Obligatorio:** Todas las contraseñas deben guardarse con encriptado criptográfico (SHA o equivalente).
@@ -101,5 +103,5 @@ El sistema implementa una arquitectura estructurada lógicamente en 3 capas (Pre
 * **Justificación:** Se utilizó `yfinance` porque provee un puente directo, estable y gratuito hacia la API de Yahoo Finance. Permite descargar datos de mercado en tiempo real, así como extraer el perfil corporativo (`info`) y los titulares de noticias (`news`) devolviendo estructuras de datos fáciles de procesar en Python, agilizando el desarrollo sin exponer credenciales ni gestionar tokens de autenticación complejos.
 
 ### Capa de Presentación
-* **Tecnología:** Framework `Tkinter` y librería `Matplotlib`.
-* **Justificación:** Se eligió Tkinter por ser la librería gráfica nativa de Python. Garantiza que la aplicación se ejecute sin problemas en cualquier sistema operativo sin requerir que los usuarios instalen dependencias visuales adicionales, cumpliendo con los estándares de portabilidad de escritorio. Adicionalmente, se utilizará Matplotlib incrustado en la interfaz para cumplir con el requerimiento funcional de generar gráficos visuales de rendimiento.
+* **Tecnología:** Interfaz Web con HTML/JS y framework `Flask` en el backend. Gráficos mediante librerías web (ej. Lightweight Charts o Chart.js).
+* **Justificación:** Se eligió una arquitectura web con Flask para permitir que el usuario interactúe con el simulador desde cualquier navegador, ofreciendo una experiencia moderna, responsiva y escalable. Las tecnologías web facilitan la creación de interfaces dinámicas e interactivas, como la visualización en tiempo real de gráficos bursátiles, que son complejas de implementar en frameworks de escritorio tradicionales.

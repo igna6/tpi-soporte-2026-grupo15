@@ -279,5 +279,73 @@ def roi_data():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/watchlist', methods=['GET'])
+def get_watchlist():
+    try:
+        tickers = gestor.obtener_watchlist()
+        if not tickers:
+            return jsonify([])
+            
+        data = yf.download(tickers, period="1d", group_by="ticker", progress=False)
+        result = []
+        for t in tickers:
+            try:
+                if len(tickers) == 1:
+                    df = data['Close'].dropna()
+                else:
+                    if t in data:
+                        df = data[t]['Close'].dropna()
+                    else:
+                        df = data['Close'][t].dropna() if 'Close' in data else []
+                        
+                if len(df) > 0:
+                    curr_price = float(df.iloc[-1])
+                    result.append({'ticker': t, 'price': curr_price})
+                else:
+                    result.append({'ticker': t, 'price': 0.0})
+            except Exception:
+                result.append({'ticker': t, 'price': 0.0})
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/watchlist', methods=['POST'])
+def add_to_watchlist():
+    data = request.json
+    ticker = data.get('ticker', '').upper().strip()
+    if not ticker:
+        return jsonify({'error': 'Ticker no proporcionado'}), 400
+    try:
+        gestor.agregar_a_watchlist(ticker)
+        return jsonify({'message': f'{ticker} agregado a favoritos'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/watchlist/<ticker>', methods=['DELETE'])
+def remove_from_watchlist(ticker):
+    ticker = ticker.upper().strip()
+    try:
+        gestor.eliminar_de_watchlist(ticker)
+        return jsonify({'message': f'{ticker} eliminado de favoritos'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/benchmark', methods=['GET'])
+def get_benchmark():
+    try:
+        data = yf.download("SPY", period="3mo", progress=False)
+        if data.empty:
+            return jsonify({'error': 'No hay datos para el benchmark SPY'}), 404
+        
+        hist = []
+        for index, row in data.iterrows():
+            hist.append({
+                'time': index.strftime('%Y-%m-%d'),
+                'value': row['Close']
+            })
+        return jsonify(hist)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000, host='0.0.0.0')

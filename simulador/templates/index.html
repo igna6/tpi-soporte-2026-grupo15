@@ -50,6 +50,14 @@
                     <div class="text-muted" style="text-align:center;">Cargando precios en vivo...</div>
                 </div>
             </div>
+
+            <div class="watchlist-section" style="margin-top: 15px;">
+                <h3>Mi Watchlist ⭐</h3>
+                <p class="text-muted" style="margin-bottom: 10px; font-size: 0.8rem;">Favoritos guardados</p>
+                <div class="market-list" id="watchlist-tickers">
+                    <div class="text-muted" style="text-align:center;">Cargando watchlist...</div>
+                </div>
+            </div>
         </aside>
 
         <!-- Panel Central: Gráfico y Operaciones -->
@@ -58,9 +66,11 @@
                 <div class="search-box">
                     <input type="text" id="search-ticker" placeholder="Buscar Ticker (ej. AAPL, NVDA)..." autocomplete="off">
                     <button id="btn-search" class="btn-primary">Ver Gráfico</button>
+                    <button id="btn-watchlist-add" class="btn-secondary" style="margin-left: 5px;" title="Agregar a Watchlist">⭐</button>
                 </div>
                 <div class="current-asset">
                     <h2 id="asset-title">Seleccione un Activo</h2>
+                    <button id="btn-watchlist-remove" class="btn-secondary hidden" style="font-size: 0.8rem; margin-left:10px;">❌ Quitar de Watchlist</button>
                 </div>
             </header>
 
@@ -127,7 +137,10 @@
         <div class="modal-content glass-panel">
             <div class="modal-header">
                 <h2>Rendimiento Histórico</h2>
-                <span id="roi-close" class="close">&times;</span>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <label style="font-size: 0.9rem; color: #aaa;"><input type="checkbox" id="chk-benchmark"> Comparar vs S&P 500 (SPY)</label>
+                    <span id="roi-close" class="close">&times;</span>
+                </div>
             </div>
             <div class="roi-chart-container" id="roi-chart-container">
                 <div id="roi-loader" class="loader">Cargando gráfico interactivo...</div>
@@ -135,7 +148,7 @@
         </div>
     </div>
 
-    <!-- Forzar recarga de caché con ?v=10 -->
-    <script src="/static/app.js?v=10"></script>
+    <!-- Forzar recarga de caché con ?v=11 -->
+    <script src="/static/app.js?v=11"></script>
 </body>
 </html>

@@ -224,3 +224,18 @@ class GestorInversiones:
             total_patrimonio,
             fecha_hoy
         )
+
+    def agregar_a_watchlist(self, ticker: str):
+        if not self.inversor or not self.usar_db:
+            return
+        database.agregar_a_watchlist(self.inversor.id_inversor, ticker.upper())
+
+    def eliminar_de_watchlist(self, ticker: str):
+        if not self.inversor or not self.usar_db:
+            return
+        database.eliminar_de_watchlist(self.inversor.id_inversor, ticker.upper())
+
+    def obtener_watchlist(self) -> List[str]:
+        if not self.inversor or not self.usar_db:
+            return []
+        return database.obtener_watchlist(self.inversor.id_inversor)

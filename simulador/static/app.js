@@ -25,9 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Error cargando tickers:", e);
     }
     
+    try {
+        loadWatchlist();
+    } catch (e) {}
+    
     // Auto-refresh market data every 30 seconds
     setInterval(() => {
         try { loadMarketTickers(); } catch(e){}
+        try { loadWatchlist(); } catch(e){}
     }, 30000);
 
     // Event Listeners
@@ -39,8 +44,17 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-buy').addEventListener('click', () => handleTrade('comprar'));
     document.getElementById('btn-sell').addEventListener('click', () => handleTrade('vender'));
 
+    // Eventos Watchlist
+    document.getElementById('btn-watchlist-add').addEventListener('click', () => {
+        if(currentTicker) addToWatchlist(currentTicker);
+    });
+    document.getElementById('btn-watchlist-remove').addEventListener('click', () => {
+        if(currentTicker) removeFromWatchlist(currentTicker);
+    });
+
     // Eventos del ROI
     document.getElementById('btn-roi').addEventListener('click', loadROIChart);
+    document.getElementById('chk-benchmark').addEventListener('change', loadROIChart);
     document.getElementById('roi-close').addEventListener('click', () => {
         document.getElementById('roi-modal').classList.add('hidden');
     });
@@ -103,11 +117,41 @@ async function loadROIChart() {
             topColor: 'rgba(37, 99, 235, 0.4)',
             bottomColor: 'rgba(37, 99, 235, 0.0)',
             lineWidth: 2,
+            title: 'Mi Portafolio'
         });
 
-        // Asegurarse de ordenar por fecha y ajustar el timezone si es necesario
-        // En nuestro caso, database devuelve YYYY-MM-DD lo cual LightweightCharts acepta
         areaSeries.setData(data);
+
+        // Benchmark logic
+        const showBenchmark = document.getElementById('chk-benchmark').checked;
+        if (showBenchmark) {
+            try {
+                const resBench = await fetch('/api/benchmark');
+                const dataBench = await resBench.json();
+                if (!dataBench.error) {
+                    const benchSeries = roiChartObj.addLineSeries({
+                        color: '#f59e0b',
+                        lineWidth: 2,
+                        title: 'S&P 500 (SPY)'
+                    });
+                    
+                    // Normalizar a porcentaje base 0
+                    if (data.length > 0 && dataBench.length > 0) {
+                        const portBase = data[0].value;
+                        const benchBase = dataBench[0].value;
+                        
+                        const normData = data.map(d => ({ time: d.time, value: ((d.value - portBase) / portBase) * 100 }));
+                        const normBench = dataBench.map(d => ({ time: d.time, value: ((d.value - benchBase) / benchBase) * 100 }));
+                        
+                        areaSeries.setData(normData);
+                        benchSeries.setData(normBench);
+                        roiChartObj.applyOptions({ rightPriceScale: { mode: LightweightCharts.PriceScaleMode.Percentage } });
+                    }
+                }
+            } catch (e) {
+                console.error("Error cargando benchmark", e);
+            }
+        }
         
         roiChartObj.timeScale().fitContent();
         
@@ -262,6 +306,7 @@ async function handleSearch() {
     document.getElementById('info-pe').innerText = '...';
     document.getElementById('info-rec').innerText = '...';
     document.getElementById('news-list').innerHTML = '<div class="text-muted">Cargando noticias...</div>';
+    document.getElementById('btn-watchlist-remove').classList.add('hidden');
 
     lineSeries.setData([]);
     smaSeries.setData([]);
@@ -299,6 +344,17 @@ async function handleSearch() {
     loadAssetInfo(ticker);
     loadAssetNews(ticker);
     loadMarketPressure(ticker);
+    
+    // Evaluar si está en watchlist para mostrar botón remover
+    fetch('/api/watchlist').then(r => r.json()).then(wl => {
+        if(wl && wl.find(x => x.ticker === ticker)) {
+            document.getElementById('btn-watchlist-remove').classList.remove('hidden');
+            document.getElementById('btn-watchlist-add').classList.add('hidden');
+        } else {
+            document.getElementById('btn-watchlist-remove').classList.add('hidden');
+            document.getElementById('btn-watchlist-add').classList.remove('hidden');
+        }
+    }).catch(e=>{});
 }
 
 async function loadMarketPressure(ticker) {
@@ -436,4 +492,79 @@ function showToast(msg, type='info') {
     setTimeout(() => {
         toast.remove();
     }, 5000);
+}
+
+// Watchlist API calls
+async function loadWatchlist() {
+    try {
+        const res = await fetch('/api/watchlist');
+        if (!res.ok) return;
+        const tickers = await res.json();
+        
+        const container = document.getElementById('watchlist-tickers');
+        container.innerHTML = '';
+        
+        if (tickers.length === 0) {
+            container.innerHTML = '<div class="text-muted" style="text-align:center;">No hay favoritos</div>';
+            return;
+        }
+        
+        tickers.forEach(t => {
+            const div = document.createElement('div');
+            div.className = 'ticker-item';
+            div.innerHTML = `
+                <div class="ticker-name">${t.ticker}</div>
+                <div class="ticker-price">
+                    <span class="val">$${t.price.toFixed(2)}</span>
+                </div>
+            `;
+            
+            div.addEventListener('click', () => {
+                document.getElementById('search-ticker').value = t.ticker;
+                handleSearch();
+            });
+            
+            container.appendChild(div);
+        });
+    } catch (e) {
+        console.error('Error cargando watchlist', e);
+    }
+}
+
+async function addToWatchlist(ticker) {
+    try {
+        const res = await fetch('/api/watchlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticker: ticker })
+        });
+        const data = await res.json();
+        if(res.ok) {
+            showToast(data.message, 'success');
+            loadWatchlist();
+            document.getElementById('btn-watchlist-add').classList.add('hidden');
+            document.getElementById('btn-watchlist-remove').classList.remove('hidden');
+        } else {
+            showToast(data.error, 'error');
+        }
+    } catch(e) {
+        showToast('Error agregando a watchlist', 'error');
+    }
+}
+
+async function removeFromWatchlist(ticker) {
+    try {
+        const res = await fetch(`/api/watchlist/${ticker}`, { method: 'DELETE' });
+        const data = await res.json();
+        if(res.ok) {
+            showToast(data.message, 'success');
+            loadWatchlist();
+            document.getElementById('btn-watchlist-add').classList.remove('hidden');
+            document.getElementById('btn-watchlist-remove').classList.add('hidden');
+        } else {
+            showToast(data.error, 'error');
+        }
+    } catch(e) {
+        showToast('Error removiendo de watchlist', 'error');
+    }
 }
