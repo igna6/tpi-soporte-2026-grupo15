@@ -4,10 +4,10 @@
 
 ## Descripción del proyecto
 
-El alcance de este proyecto es desarrollar un **Simulador de Inversiones** interactivo. Es una aplicación de escritorio que permite a cualquier persona simular la compra y venta de acciones de empresas reales (como Apple, Tesla o Google) utilizando dinero virtual, fundamentado en cotizaciones obtenidas del mercado actual en tiempo real.
+El alcance de este proyecto es desarrollar un **Simulador de Inversiones** interactivo. Es una aplicación web que permite a cualquier persona simular la compra y venta de acciones de empresas reales (como Apple, Tesla o Google) utilizando dinero virtual, fundamentado en cotizaciones obtenidas del mercado actual en tiempo real.
 
 **Objetivos principales:**
-* **Cotizaciones Reales:** Conectarse automáticamente a internet mediante la API de Yahoo Finance para consultar el valor exacto de las acciones al momento de la operación.
+* **Cotizaciones Reales:** Conectarse automáticamente a internet mediante Yahoo Finance para consultar el valor exacto de las acciones al momento de la operación.
 * **Análisis Fundamental (Research):** Proveer información detallada del perfil de la empresa (sector, industria) y las noticias financieras más recientes para que el usuario tome decisiones informadas.
 * **Experiencia de Usuario Interactiva:** Proveer una interfaz gráfica donde el usuario ingrese la abreviatura de la empresa (Ticker) y la cantidad, y el sistema calcule totales a pagar de forma automática.
 * **Validación de Operaciones:** Revisar que las transacciones cumplan con reglas financieras lógicas (fondos, tenencias, montos mínimos) antes de ser registradas.
@@ -61,7 +61,7 @@ El sistema implementa una arquitectura estructurada lógicamente en 3 capas (Pre
 ### No Funcionales
 
 #### Portability
-* **Obligatorio:** El sistema debe ejecutarse desde un único archivo `.py` llamado `app.py` (Sólo Escritorio).
+* **Obligatorio:** El sistema debe ejecutarse desde un único archivo `.py` llamado `app.py`.
 
 #### Security
 * **Obligatorio:** Todas las contraseñas deben guardarse con encriptado criptográfico (SHA o equivalente).
