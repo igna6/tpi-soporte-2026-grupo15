@@ -49,11 +49,15 @@ body {
 
 /* Sidebar */
 .sidebar {
-    width: 320px;
+    width: 380px; /* Aumentamos el ancho de 320 a 380 */
+    min-width: 380px;
     display: flex;
     flex-direction: column;
     padding: 1.5rem;
     gap: 2rem;
+    flex-shrink: 0; /* Evita que el panel central aplaste la barra */
+    overflow-y: auto; /* Permite scrollear la barra lateral si la pantalla es baja */
+    overflow-x: hidden;
 }
 
 .logo {
@@ -97,6 +101,7 @@ body {
 }
 
 .table-container {
+    overflow-x: auto; 
     overflow-y: auto;
     flex-grow: 1;
 }
@@ -107,10 +112,11 @@ table {
 }
 
 th, td {
-    padding: 0.75rem 0.5rem;
+    padding: 0.75rem 0.25rem; /* Achicamos el margen lateral */
     text-align: left;
     font-size: 0.85rem;
     border-bottom: 1px solid var(--panel-border);
+    white-space: nowrap; /* Mantiene los números en una sola línea */
 }
 
 th {
@@ -427,3 +433,6 @@ td strong {
     justify-content: center;
     align-items: center;
 }
+
+#roi-modal { z-index: 9999; }
+.modal-content { z-index: 10000; position: relative; }
