@@ -60,6 +60,29 @@ def get_portfolio():
         'posiciones': posiciones
     })
 
+# 1. Agregamos currentPrice dentro de get_info
+@app.route('/api/info/<ticker>', methods=['GET'])
+def get_info(ticker):
+    try:
+        stock = yf.Ticker(ticker)
+        info = stock.info
+        
+        # Extraer precio de mercado actual
+        current_price = info.get('currentPrice') or info.get('regularMarketPrice') or 0.0
+        
+        return jsonify({
+            'sector': info.get('sector', 'Desconocido'),
+            'industry': info.get('industry', 'Desconocido'),
+            'marketCap': info.get('marketCap', 0),
+            'trailingPE': info.get('trailingPE', 0),
+            'dividendYield': info.get('dividendYield', 0),
+            'recommendation': info.get('recommendationKey', 'none'),
+            'longName': info.get('longName', ticker),
+            'currentPrice': current_price  # <-- AHORA LO DEVOLVEMOS AQUI
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/chart/<ticker>', methods=['GET'])
 def get_chart(ticker):
     try:
@@ -69,20 +92,14 @@ def get_chart(ticker):
         if hist.empty:
             return jsonify({'error': 'No hay datos para este ticker'}), 404
             
-        # Calcular SMA 20 (Simple Moving Average de 20 días)
-        hist['SMA20'] = hist['Close'].rolling(window=20).mean()
-            
-        # Formatear para Lightweight Charts (time, open, high, low, close)
         data = []
         for index, row in hist.iterrows():
-            sma = row['SMA20']
             data.append({
                 'time': index.strftime('%Y-%m-%d'),
-                'open': row['Open'],
-                'high': row['High'],
-                'low': row['Low'],
-                'close': row['Close'],
-                'sma20': sma if not str(sma) == 'nan' else None
+                'open': float(row['Open']),
+                'high': float(row['High']),
+                'low': float(row['Low']),
+                'close': float(row['Close'])
             })
         return jsonify(data)
     except Exception as e:
@@ -129,24 +146,6 @@ def get_tickers():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/info/<ticker>', methods=['GET'])
-def get_info(ticker):
-    try:
-        stock = yf.Ticker(ticker)
-        # fast_info es mas rapido si existe, sino caemos a info
-        info = stock.info
-        
-        return jsonify({
-            'sector': info.get('sector', 'Desconocido'),
-            'industry': info.get('industry', 'Desconocido'),
-            'marketCap': info.get('marketCap', 0),
-            'trailingPE': info.get('trailingPE', 0),
-            'dividendYield': info.get('dividendYield', 0),
-            'recommendation': info.get('recommendationKey', 'none'),
-            'longName': info.get('longName', ticker)
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/market_pressure/<ticker>', methods=['GET'])
 def market_pressure(ticker):
@@ -212,6 +211,7 @@ def get_news(ticker):
 def comprar():
     data = request.json
     ticker = data.get('ticker', '').upper().strip()
+    broker = data.get('broker', 'PPI')  # Captura el broker seleccionado
     try:
         cantidad = float(data.get('cantidad', 0))
         if cantidad <= 0:
@@ -223,8 +223,12 @@ def comprar():
             return jsonify({'error': 'Ticker no encontrado en Yahoo Finance'}), 404
         precio = float(hist['Close'].iloc[-1])
         
-        gestor.comprar_activo(ticker, cantidad, precio)
-        return jsonify({'message': f'Compra exitosa de {cantidad} {ticker} a ${precio:.2f}'})
+        # Se pasa el broker al gestor de negocio
+        gestor.comprar_activo(ticker, cantidad, precio, broker_nombre=broker)
+        
+        # Calcular comisión para informarla en el mensaje
+        comision = gestor.calcular_comision(cantidad * precio, broker)
+        return jsonify({'message': f'Compra exitosa de {cantidad} {ticker} a ${precio:.2f} (Comisión: ${comision:.2f} USD via {broker})'})
     except ReglaNegocioException as e:
         return jsonify({'error': str(e)}), 400
     except ValueError as e:
@@ -236,6 +240,7 @@ def comprar():
 def vender():
     data = request.json
     ticker = data.get('ticker', '').upper().strip()
+    broker = data.get('broker', 'PPI')  # Captura el broker seleccionado
     try:
         cantidad = float(data.get('cantidad', 0))
         if cantidad <= 0:
@@ -247,8 +252,12 @@ def vender():
             return jsonify({'error': 'Ticker no encontrado en Yahoo Finance'}), 404
         precio = float(hist['Close'].iloc[-1])
         
-        gestor.vender_activo(ticker, cantidad, precio)
-        return jsonify({'message': f'Venta exitosa de {cantidad} {ticker} a ${precio:.2f}'})
+        # Se pasa el broker al gestor de negocio
+        gestor.vender_activo(ticker, cantidad, precio, broker_nombre=broker)
+        
+        # Calcular comisión para informarla en el mensaje
+        comision = gestor.calcular_comision(cantidad * precio, broker)
+        return jsonify({'message': f'Venta exitosa de {cantidad} {ticker} a ${precio:.2f} (Comisión: ${comision:.2f} USD via {broker})'})
     except ReglaNegocioException as e:
         return jsonify({'error': str(e)}), 400
     except ValueError as e:
@@ -344,6 +353,22 @@ def get_benchmark():
                 'value': row['Close']
             })
         return jsonify(hist)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/calcular_comision', methods=['POST'])
+def estimar_comision():
+    data = request.json
+    monto = float(data.get('monto', 0))
+    broker = data.get('broker', 'PPI')
+    try:
+        comision = gestor.calcular_comision(monto, broker)
+        return jsonify({
+            'monto_bruto': monto,
+            'comision': comision,
+            'total_compra': monto + comision,
+            'total_venta': max(0.0, monto - comision)
+        })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

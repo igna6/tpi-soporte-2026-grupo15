@@ -2,7 +2,8 @@
 let chart;
 let lineSeries;
 let smaSeries;
-let currentTicker = null;
+let currentTicker = 'AAPL';
+let currentTickerPrice = 0; // Guardará el precio del ticker activo en cada momento
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,21 +25,21 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
         console.error("Error cargando tickers:", e);
     }
-    
+
     try {
         loadWatchlist();
-    } catch (e) {}
-    
+    } catch (e) { }
+
     // Auto-refresh market data every 30 seconds
     setInterval(() => {
-        try { loadMarketTickers(); } catch(e){}
-        try { loadWatchlist(); } catch(e){}
+        try { loadMarketTickers(); } catch (e) { }
+        try { loadWatchlist(); } catch (e) { }
     }, 30000);
 
     // Event Listeners
     document.getElementById('btn-search').addEventListener('click', handleSearch);
     document.getElementById('search-ticker').addEventListener('keypress', (e) => {
-        if(e.key === 'Enter') handleSearch();
+        if (e.key === 'Enter') handleSearch();
     });
 
     document.getElementById('btn-buy').addEventListener('click', () => handleTrade('comprar'));
@@ -46,10 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Eventos Watchlist
     document.getElementById('btn-watchlist-add').addEventListener('click', () => {
-        if(currentTicker) addToWatchlist(currentTicker);
+        if (currentTicker) addToWatchlist(currentTicker);
     });
     document.getElementById('btn-watchlist-remove').addEventListener('click', () => {
-        if(currentTicker) removeFromWatchlist(currentTicker);
+        if (currentTicker) removeFromWatchlist(currentTicker);
     });
 
     // Eventos del ROI
@@ -62,6 +63,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = document.getElementById('roi-modal');
         if (e.target === modal) modal.classList.add('hidden');
     });
+
+    // Eventos para calcular comisión en tiempo real
+    document.getElementById('trade-qty').addEventListener('input', () => actualizarDesgloseComision(false));
+    document.getElementById('trade-broker').addEventListener('change', () => actualizarDesgloseComision(false));
 });
 
 let roiChartObj = null;
@@ -70,19 +75,19 @@ async function loadROIChart() {
     const modal = document.getElementById('roi-modal');
     const container = document.getElementById('roi-chart-container');
     const loader = document.getElementById('roi-loader');
-    
+
     modal.classList.remove('hidden');
     loader.classList.remove('hidden');
-    
+
     try {
         const res = await fetch('/api/roi_data');
         const data = await res.json();
-        
+
         loader.classList.add('hidden');
-        
+
         // Limpiar contenedor
         container.innerHTML = '';
-        
+
         if (data.length === 0) {
             container.innerHTML = '<p>No hay datos suficientes para graficar.</p>';
             return;
@@ -134,15 +139,15 @@ async function loadROIChart() {
                         lineWidth: 2,
                         title: 'S&P 500 (SPY)'
                     });
-                    
+
                     // Normalizar a porcentaje base 0
                     if (data.length > 0 && dataBench.length > 0) {
                         const portBase = data[0].value;
                         const benchBase = dataBench[0].value;
-                        
+
                         const normData = data.map(d => ({ time: d.time, value: ((d.value - portBase) / portBase) * 100 }));
                         const normBench = dataBench.map(d => ({ time: d.time, value: ((d.value - benchBase) / benchBase) * 100 }));
-                        
+
                         areaSeries.setData(normData);
                         benchSeries.setData(normBench);
                         roiChartObj.applyOptions({ rightPriceScale: { mode: LightweightCharts.PriceScaleMode.Percentage } });
@@ -152,9 +157,9 @@ async function loadROIChart() {
                 console.error("Error cargando benchmark", e);
             }
         }
-        
+
         roiChartObj.timeScale().fitContent();
-        
+
     } catch (e) {
         loader.classList.add('hidden');
         showToast("Error al cargar gráfico interactivo de ROI.", "error");
@@ -216,10 +221,10 @@ async function loadPortfolio() {
     try {
         const res = await fetch('/api/portfolio');
         const data = await res.json();
-        
+
         // Actualizar saldo
         document.getElementById('saldo-value').innerText = `$${data.saldo.toFixed(2)}`;
-        
+
         // Actualizar tabla
         const tbody = document.getElementById('portfolio-body');
         tbody.innerHTML = '';
@@ -227,11 +232,11 @@ async function loadPortfolio() {
             const isUp = pos.pnl_pct >= 0;
             const sign = isUp ? '+' : '';
             const color = isUp ? 'var(--accent-buy)' : 'var(--accent-sell)';
-            
+
             let sugColor = 'var(--text-secondary)';
             if (pos.sugerencia.includes('Ganancia')) sugColor = 'var(--accent-buy)';
             if (pos.sugerencia.includes('Stop Loss')) sugColor = 'var(--accent-sell)';
-            
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${pos.ticker}</strong></td>
@@ -256,15 +261,15 @@ async function loadMarketTickers() {
         const res = await fetch('/api/tickers');
         if (!res.ok) return;
         const tickers = await res.json();
-        
+
         const container = document.getElementById('market-tickers');
         container.innerHTML = '';
-        
+
         tickers.forEach(t => {
             const isUp = t.change >= 0;
             const sign = isUp ? '+' : '';
             const colorClass = isUp ? 'up' : 'down';
-            
+
             const div = document.createElement('div');
             div.className = 'ticker-item';
             div.innerHTML = `
@@ -274,12 +279,13 @@ async function loadMarketTickers() {
                     <span class="pct ${colorClass}">${sign}${t.change_percent.toFixed(2)}%</span>
                 </div>
             `;
-            
+
             div.addEventListener('click', () => {
                 document.getElementById('search-ticker').value = t.ticker;
+                currentTickerPrice = t.price;
                 handleSearch();
             });
-            
+
             container.appendChild(div);
         });
     } catch (e) {
@@ -289,14 +295,14 @@ async function loadMarketTickers() {
 
 async function handleSearch() {
     const ticker = document.getElementById('search-ticker').value.trim().toUpperCase();
-    if(!ticker) return;
+    if (!ticker) return;
 
     currentTicker = ticker;
     document.getElementById('asset-title').innerText = ticker;
     document.getElementById('trade-ticker-label').innerText = ticker;
-    
+
     document.getElementById('chart-loader').classList.remove('hidden');
-    
+
     // Mostrar paneles e iniciar carga
     document.getElementById('info-panel').classList.remove('hidden');
     document.getElementById('news-panel').classList.remove('hidden');
@@ -314,19 +320,29 @@ async function handleSearch() {
     try {
         const res = await fetch(`/api/chart/${ticker}`);
         const data = await res.json();
-        
+
         if (res.ok) {
             // Mapear datos de velas
             lineSeries.setData(data);
-            
+
+            // CAPTURA ROBUSTA DEL PRECIO ACTUAL
+            if (Array.isArray(data) && data.length > 0) {
+                const ultimo = data[data.length - 1];
+                // Extrae el precio ya sea de close, value o c
+                currentTickerPrice = parseFloat(ultimo.close || ultimo.value || ultimo.c || 0);
+            }
+
             // Mapear datos de SMA
             const smaData = data.filter(d => d.sma20 !== null).map(d => ({
                 time: d.time,
                 value: d.sma20
             }));
             smaSeries.setData(smaData);
-            
+
             chart.timeScale().fitContent();
+
+            // Llama inmediatamente al cálculo de comisión
+            actualizarDesgloseComision();
         } else {
             showToast(data.error || 'Error cargando gráfico', 'error');
             document.getElementById('asset-title').innerText = 'Activo no encontrado';
@@ -334,6 +350,7 @@ async function handleSearch() {
             document.getElementById('news-panel').classList.add('hidden');
             return;
         }
+
     } catch (e) {
         showToast('Error de conexión con gráfico', 'error');
     } finally {
@@ -344,17 +361,17 @@ async function handleSearch() {
     loadAssetInfo(ticker);
     loadAssetNews(ticker);
     loadMarketPressure(ticker);
-    
+
     // Evaluar si está en watchlist para mostrar botón remover
     fetch('/api/watchlist').then(r => r.json()).then(wl => {
-        if(wl && wl.find(x => x.ticker === ticker)) {
+        if (wl && wl.find(x => x.ticker === ticker)) {
             document.getElementById('btn-watchlist-remove').classList.remove('hidden');
             document.getElementById('btn-watchlist-add').classList.add('hidden');
         } else {
             document.getElementById('btn-watchlist-remove').classList.add('hidden');
             document.getElementById('btn-watchlist-add').classList.remove('hidden');
         }
-    }).catch(e=>{});
+    }).catch(e => { });
 }
 
 async function loadMarketPressure(ticker) {
@@ -363,20 +380,20 @@ async function loadMarketPressure(ticker) {
     const askBar = document.getElementById('pressure-ask');
     const bidLabel = document.getElementById('bid-size-label');
     const askLabel = document.getElementById('ask-size-label');
-    
+
     container.style.display = 'none'; // ocultar por defecto
-    
+
     try {
         const res = await fetch(`/api/market_pressure/${ticker}`);
-        if(res.ok) {
+        if (res.ok) {
             const data = await res.json();
-            if(data.error) return;
-            
+            if (data.error) return;
+
             container.style.display = 'block';
-            
+
             bidBar.style.width = `${data.bidPct}%`;
             askBar.style.width = `${data.askPct}%`;
-            
+
             bidLabel.innerText = `${data.bidPct.toFixed(1)}%`;
             askLabel.innerText = `${data.askPct.toFixed(1)}%`;
         }
@@ -388,30 +405,30 @@ async function loadMarketPressure(ticker) {
 async function loadAssetInfo(ticker) {
     try {
         const res = await fetch(`/api/info/${ticker}`);
-        if(res.ok) {
+        if (res.ok) {
             const info = await res.json();
             document.getElementById('info-sector').innerText = info.sector || 'N/A';
             document.getElementById('info-industry').innerText = info.industry || 'N/A';
-            
+
             // Formatear Market Cap
             let mcap = info.marketCap || 0;
-            if(mcap > 1e12) mcap = (mcap / 1e12).toFixed(2) + ' T';
-            else if(mcap > 1e9) mcap = (mcap / 1e9).toFixed(2) + ' B';
-            else if(mcap > 1e6) mcap = (mcap / 1e6).toFixed(2) + ' M';
-            
+            if (mcap > 1e12) mcap = (mcap / 1e12).toFixed(2) + ' T';
+            else if (mcap > 1e9) mcap = (mcap / 1e9).toFixed(2) + ' B';
+            else if (mcap > 1e6) mcap = (mcap / 1e6).toFixed(2) + ' M';
+
             document.getElementById('info-mcap').innerText = `$${mcap}`;
             document.getElementById('info-pe').innerText = info.trailingPE ? info.trailingPE.toFixed(2) : 'N/A';
-            
+
             const recLabel = document.getElementById('info-rec');
             recLabel.innerText = info.recommendation;
-            
-            if(['buy', 'strong_buy'].includes(info.recommendation)) recLabel.style.color = 'var(--accent-buy)';
-            else if(['sell', 'strong_sell'].includes(info.recommendation)) recLabel.style.color = 'var(--accent-sell)';
+
+            if (['buy', 'strong_buy'].includes(info.recommendation)) recLabel.style.color = 'var(--accent-buy)';
+            else if (['sell', 'strong_sell'].includes(info.recommendation)) recLabel.style.color = 'var(--accent-sell)';
             else recLabel.style.color = 'var(--text-secondary)';
-            
+
             document.getElementById('asset-title').innerText = `${ticker} - ${info.longName}`;
         }
-    } catch(e) {
+    } catch (e) {
         console.error("Error info", e);
     }
 }
@@ -419,16 +436,16 @@ async function loadAssetInfo(ticker) {
 async function loadAssetNews(ticker) {
     try {
         const res = await fetch(`/api/news/${ticker}`);
-        if(res.ok) {
+        if (res.ok) {
             const news = await res.json();
             const container = document.getElementById('news-list');
             container.innerHTML = '';
-            
-            if(news.length === 0) {
+
+            if (news.length === 0) {
                 container.innerHTML = '<div class="text-muted">No hay noticias recientes.</div>';
                 return;
             }
-            
+
             news.forEach(n => {
                 let dateStr = '';
                 if (n.time) {
@@ -444,19 +461,21 @@ async function loadAssetNews(ticker) {
                 container.appendChild(div);
             });
         }
-    } catch(e) {
+    } catch (e) {
         console.error("Error news", e);
     }
 }
 
 async function handleTrade(action) {
-    if(!currentTicker) {
+    if (!currentTicker) {
         showToast('Primero busque y seleccione un Ticker.', 'error');
         return;
     }
 
     const qty = parseFloat(document.getElementById('trade-qty').value);
-    if(isNaN(qty) || qty <= 0) {
+    const broker = document.getElementById('trade-broker').value; // Capturar el broker elegido
+
+    if (isNaN(qty) || qty <= 0) {
         showToast('Ingrese una cantidad válida mayor a 0.', 'error');
         return;
     }
@@ -465,11 +484,15 @@ async function handleTrade(action) {
         const res = await fetch(`/api/${action}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ticker: currentTicker, cantidad: qty })
+            body: JSON.stringify({
+                ticker: currentTicker,
+                cantidad: qty,
+                broker: broker // Enviamos el broker a la API
+            })
         });
-        
+
         const data = await res.json();
-        
+
         if (res.ok) {
             showToast(data.message, 'success');
             loadPortfolio();
@@ -481,14 +504,14 @@ async function handleTrade(action) {
     }
 }
 
-function showToast(msg, type='info') {
+function showToast(msg, type = 'info') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.innerText = msg;
-    
+
     container.appendChild(toast);
-    
+
     setTimeout(() => {
         toast.remove();
     }, 5000);
@@ -500,15 +523,15 @@ async function loadWatchlist() {
         const res = await fetch('/api/watchlist');
         if (!res.ok) return;
         const tickers = await res.json();
-        
+
         const container = document.getElementById('watchlist-tickers');
         container.innerHTML = '';
-        
+
         if (tickers.length === 0) {
             container.innerHTML = '<div class="text-muted" style="text-align:center;">No hay favoritos</div>';
             return;
         }
-        
+
         tickers.forEach(t => {
             const div = document.createElement('div');
             div.className = 'ticker-item';
@@ -518,12 +541,13 @@ async function loadWatchlist() {
                     <span class="val">$${t.price.toFixed(2)}</span>
                 </div>
             `;
-            
+
             div.addEventListener('click', () => {
                 document.getElementById('search-ticker').value = t.ticker;
+                if (t.price) currentTickerPrice = t.price;
                 handleSearch();
             });
-            
+
             container.appendChild(div);
         });
     } catch (e) {
@@ -539,7 +563,7 @@ async function addToWatchlist(ticker) {
             body: JSON.stringify({ ticker: ticker })
         });
         const data = await res.json();
-        if(res.ok) {
+        if (res.ok) {
             showToast(data.message, 'success');
             loadWatchlist();
             document.getElementById('btn-watchlist-add').classList.add('hidden');
@@ -547,7 +571,7 @@ async function addToWatchlist(ticker) {
         } else {
             showToast(data.error, 'error');
         }
-    } catch(e) {
+    } catch (e) {
         showToast('Error agregando a watchlist', 'error');
     }
 }
@@ -556,7 +580,7 @@ async function removeFromWatchlist(ticker) {
     try {
         const res = await fetch(`/api/watchlist/${ticker}`, { method: 'DELETE' });
         const data = await res.json();
-        if(res.ok) {
+        if (res.ok) {
             showToast(data.message, 'success');
             loadWatchlist();
             document.getElementById('btn-watchlist-add').classList.remove('hidden');
@@ -564,7 +588,94 @@ async function removeFromWatchlist(ticker) {
         } else {
             showToast(data.error, 'error');
         }
-    } catch(e) {
+    } catch (e) {
         showToast('Error removiendo de watchlist', 'error');
     }
+}
+
+// Tabla de auxilio cliente (por si la API tarda)
+const TABLA_BROKERS = {
+    "PPI": { pct: 0.006, min: 1.5 },
+    "IOL": { pct: 0.005, min: 2.0 },
+    "Interactive Brokers": { pct: 0.0035, min: 1.0 },
+    "Sin Comisión": { pct: 0.0, min: 0.0 }
+};
+
+async function actualizarDesgloseComision(mostrarErrores = false) {
+    const qtyInput = document.getElementById('trade-qty');
+    const brokerInput = document.getElementById('trade-broker');
+
+    if (!qtyInput || !brokerInput) return;
+
+    const qty = parseFloat(qtyInput.value) || 0;
+    const broker = brokerInput.value;
+
+    if (qty <= 0) {
+        if (mostrarErrores) {
+            showToast('Ingrese una cantidad mayor a 0.', 'error');
+        }
+        document.getElementById('lbl-subtotal').innerText = '$0.00';
+        document.getElementById('lbl-comision').innerText = '$0.00';
+        document.getElementById('lbl-total').innerText = '$0.00';
+        return;
+    }
+
+    // 1. Si no hay precio retenido, consultamos el gráfico o /api/info
+    if (!currentTickerPrice || currentTickerPrice === 0) {
+        try {
+            const resChart = await fetch(`/api/chart/${currentTicker}`);
+            if (resChart.ok) {
+                const dataChart = await resChart.json();
+                if (Array.isArray(dataChart) && dataChart.length > 0) {
+                    const ultimo = dataChart[dataChart.length - 1];
+                    currentTickerPrice = parseFloat(ultimo.close || ultimo.value || ultimo.c || 0);
+                }
+            }
+        } catch (e) {
+            console.error("Error obteniendo precio de gráfico", e);
+        }
+    }
+
+    const montoBruto = qty * (currentTickerPrice || 0);
+
+    if (montoBruto <= 0) {
+        if (mostrarErrores) {
+            showToast('Cargue o seleccione un ticker válido para cotizar.', 'error');
+        }
+        return;
+    }
+
+    // 2. Intentamos conectar a la API de Python
+    try {
+        const res = await fetch('/api/calcular_comision', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                monto: montoBruto,
+                broker: broker
+            })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            document.getElementById('lbl-subtotal').innerText = `$${data.monto_bruto.toFixed(2)}`;
+            document.getElementById('lbl-comision').innerText = `$${data.comision.toFixed(2)}`;
+            document.getElementById('lbl-total').innerText = `$${data.total_compra.toFixed(2)}`;
+            return;
+        }
+    } catch (e) {
+        console.warn("API de comisiones no disponible en Python, usando cálculo local de contingencia...", e);
+    }
+
+    // 3. Salvavidas en el Frontend (si falla el backend)
+    const config = TABLA_BROKERS[broker] || { pct: 0, min: 0 };
+    let comisionCalculada = montoBruto * config.pct;
+    if (montoBruto > 0 && comisionCalculada < config.min) {
+        comisionCalculada = config.min;
+    }
+    const totalCompra = montoBruto + comisionCalculada;
+
+    document.getElementById('lbl-subtotal').innerText = `$${montoBruto.toFixed(2)}`;
+    document.getElementById('lbl-comision').innerText = `$${comisionCalculada.toFixed(2)}`;
+    document.getElementById('lbl-total').innerText = `$${totalCompra.toFixed(2)}`;
 }

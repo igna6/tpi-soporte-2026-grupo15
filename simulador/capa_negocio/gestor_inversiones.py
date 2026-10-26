@@ -38,6 +38,14 @@ class Posicion:
     cant_actual: float
     prec_prom_compra: float
 
+# Configuración de comisiones (% sobre monto y arancel mínimo en USD)
+CONFIG_BROKERS = {
+    "PPI": {"comision_pct": 0.006, "minimo": 1.5},      # 0.6% (Mínimo $1.5 USD)
+    "IOL": {"comision_pct": 0.005, "minimo": 2.0},      # 0.5% (Mínimo $2.0 USD)
+    "Interactive Brokers": {"comision_pct": 0.0035, "minimo": 1.0}, # 0.35%
+    "Sin Comisión": {"comision_pct": 0.0, "minimo": 0.0}
+}
+
 class GestorInversiones:
     def __init__(self):
         self.inversor: Optional[Inversor] = None
@@ -76,21 +84,28 @@ class GestorInversiones:
         """Método auxiliar para tests."""
         self.posiciones[posicion.ticker_activo] = posicion
 
-    def comprar_activo(self, ticker: str, cantidad: float, precio_unitario: float) -> Transaccion:
+    def comprar_activo(self, ticker: str, cantidad: float, precio_unitario: float, broker_nombre: str = "PPI") -> Transaccion:
         if not self.inversor:
             raise ValueError("Inversor no configurado en el Gestor.")
 
-        costo_total = precio_unitario * cantidad
+        monto_bruto = precio_unitario * cantidad
 
         # RN-03: Monto mínimo de compra
-        if costo_total < 10.00:
-            raise ReglaNegocioException(f"El costo total de la compra (${costo_total:.2f}) es menor al mínimo permitido de $10.00 USD.")
+        if monto_bruto < 10.00:
+            raise ReglaNegocioException(f"El costo total de la compra (${monto_bruto:.2f}) es menor al mínimo permitido de $10.00 USD.")
 
-        # RN-01: Saldo suficiente
+        # Calcular comisión y costo total
+        comision = self.calcular_comision(monto_bruto, broker_nombre)
+        costo_total = monto_bruto + comision
+
+        # RN-01: Saldo suficiente (incluyendo comisión)
         if costo_total > self.inversor.saldo_efectivo:
-            raise ReglaNegocioException(f"Saldo insuficiente. Saldo actual: ${self.inversor.saldo_efectivo:.2f}, Costo: ${costo_total:.2f}")
+            raise ReglaNegocioException(
+                f"Saldo insuficiente. Saldo actual: ${self.inversor.saldo_efectivo:.2f}, "
+                f"Requerido: ${costo_total:.2f} (${monto_bruto:.2f} + ${comision:.2f} comisión de {broker_nombre})"
+            )
 
-        # Descontar saldo
+        # Descontar saldo con comisión incluida
         self.inversor.saldo_efectivo -= costo_total
 
         # Actualizar posición
@@ -106,7 +121,7 @@ class GestorInversiones:
                 id_inversor=self.inversor.id_inversor,
                 ticker_activo=ticker,
                 cant_actual=cantidad,
-                prec_prom_compra=precio_unitario
+                prec_prom_compra=costo_total / cantidad  # Refleja el costo real por acción incluyendo comisión
             )
             self.posiciones[ticker] = pos
 
@@ -120,7 +135,7 @@ class GestorInversiones:
             fecha_hora=datetime.now()
         )
 
-        # Delegar persistencia a Capa de Datos si corresponde
+        # Delegar persistencia
         if self.usar_db:
             database.actualizar_saldo_inversor(self.inversor.id_inversor, self.inversor.saldo_efectivo)
             database.asegurar_activo(ticker)
@@ -131,7 +146,7 @@ class GestorInversiones:
 
         return transaccion
 
-    def vender_activo(self, ticker: str, cantidad: float, precio_unitario: float) -> Transaccion:
+    def vender_activo(self, ticker: str, cantidad: float, precio_unitario: float, broker_nombre: str = "PPI") -> Transaccion:
         if not self.inversor:
             raise ValueError("Inversor no configurado en el Gestor.")
 
@@ -144,9 +159,13 @@ class GestorInversiones:
         if cantidad > pos.cant_actual:
             raise ReglaNegocioException(f"Cantidad a vender ({cantidad}) supera la tenencia actual ({pos.cant_actual}).")
 
+        # Calcular ingreso neto con comisión
+        monto_bruto = precio_unitario * cantidad
+        comision = self.calcular_comision(monto_bruto, broker_nombre)
+        ingreso_neto = monto_bruto - comision
+
         # Sumar saldo
-        ingreso_total = precio_unitario * cantidad
-        self.inversor.saldo_efectivo += ingreso_total
+        self.inversor.saldo_efectivo += ingreso_neto
 
         # Descontar cantidad de posición
         pos.cant_actual -= cantidad
@@ -164,7 +183,7 @@ class GestorInversiones:
             fecha_hora=datetime.now()
         )
 
-        # Delegar persistencia a Capa de Datos si corresponde
+        # Delegar persistencia
         if self.usar_db:
             database.actualizar_saldo_inversor(self.inversor.id_inversor, self.inversor.saldo_efectivo)
             database.registrar_transaccion(
@@ -239,3 +258,11 @@ class GestorInversiones:
         if not self.inversor or not self.usar_db:
             return []
         return database.obtener_watchlist(self.inversor.id_inversor)
+
+    def calcular_comision(self, monto_total: float, broker_nombre: str = "PPI") -> float:
+        """Calcula la comisión según el broker seleccionado y el monto de la orden."""
+        config = CONFIG_BROKERS.get(broker_nombre, CONFIG_BROKERS["Sin Comisión"])
+        comision = monto_total * config["comision_pct"]
+        if monto_total <= 0:
+            return 0.0
+        return max(comision, config["minimo"])

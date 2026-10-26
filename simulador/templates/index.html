@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,7 @@
     <link rel="stylesheet" href="/static/style.css?v=5">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
-   <style>
+    <style>
         /* 1. Solución estricta para el scroll de los tickers */
         #market-tickers {
             max-height: 220px !important;
@@ -17,12 +18,13 @@
             overflow-x: hidden !important;
             padding-right: 5px;
         }
-        
+
         /* 2. Solución para que el modal del gráfico ROI tape TODO */
         #roi-modal {
-            z-index: 9999 !important; /* Lo trae al frente de todo */
+            z-index: 9999 !important;
+            /* Lo trae al frente de todo */
         }
-        
+
         /* Asegura que el fondo del modal oscurezca la pantalla y se centre */
         #roi-modal:not(.hidden) {
             display: flex !important;
@@ -35,7 +37,7 @@
             justify-content: center;
             align-items: center;
         }
-        
+
         /* Ajuste para que el contenido del modal no se deforme */
         .modal-content {
             z-index: 10000 !important;
@@ -45,18 +47,21 @@
         }
     </style>
 </head>
+
 <body>
     <div id="toast-container"></div>
-    
+
     <div class="layout">
         <!-- Panel Izquierdo: Portafolio -->
         <aside class="sidebar glass-panel">
             <h1 class="logo">INNOVA<span>TRADE</span></h1>
-            
+
             <div class="saldo-card">
                 <h2>Saldo Disponible</h2>
                 <div id="saldo-value" class="saldo-monto">$0.00</div>
-                <button id="btn-roi" class="btn-primary" style="margin-top: 10px; width: 100%; padding: 0.5rem; font-size: 0.85rem;">Ver Rendimiento Histórico</button>
+                <button id="btn-roi" class="btn-primary"
+                    style="margin-top: 10px; width: 100%; padding: 0.5rem; font-size: 0.85rem;">Ver Rendimiento
+                    Histórico</button>
             </div>
 
             <div class="portfolio-section">
@@ -82,8 +87,9 @@
             <div class="market-section" style="flex-shrink: 0; margin-bottom: 20px;">
                 <h3>Oportunidades de Inversión</h3>
                 <p class="text-muted" style="margin-bottom: 10px; font-size: 0.8rem;">Click para ver gráfico</p>
-                
-                <div class="market-list" id="market-tickers" style="max-height: 250px; min-height: 150px; overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
+
+                <div class="market-list" id="market-tickers"
+                    style="max-height: 250px; min-height: 150px; overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
                     <div class="text-muted" style="text-align:center;">Cargando precios en vivo...</div>
                 </div>
             </div>
@@ -101,13 +107,16 @@
         <main class="main-content">
             <header class="topbar">
                 <div class="search-box">
-                    <input type="text" id="search-ticker" placeholder="Buscar Ticker (ej. AAPL, NVDA)..." autocomplete="off">
+                    <input type="text" id="search-ticker" placeholder="Buscar Ticker (ej. AAPL, NVDA)..."
+                        autocomplete="off">
                     <button id="btn-search" class="btn-primary">Ver Gráfico</button>
-                    <button id="btn-watchlist-add" class="btn-secondary" style="margin-left: 5px;" title="Agregar a Watchlist">⭐</button>
+                    <button id="btn-watchlist-add" class="btn-secondary" style="margin-left: 5px;"
+                        title="Agregar a Watchlist">⭐</button>
                 </div>
                 <div class="current-asset">
                     <h2 id="asset-title">Seleccione un Activo</h2>
-                    <button id="btn-watchlist-remove" class="btn-secondary hidden" style="font-size: 0.8rem; margin-left:10px;">❌ Quitar de Watchlist</button>
+                    <button id="btn-watchlist-remove" class="btn-secondary hidden"
+                        style="font-size: 0.8rem; margin-left:10px;">❌ Quitar de Watchlist</button>
                 </div>
             </header>
 
@@ -119,29 +128,63 @@
                 <div class="trade-panel glass-panel">
                     <div class="trade-info">
                         <h3>Operar <span id="trade-ticker-label">...</span></h3>
-                        <p class="text-muted">Ingrese la cantidad de acciones a transaccionar al precio actual de mercado.</p>
+                        <p class="text-muted">Ingrese la cantidad de acciones a transaccionar al precio actual de
+                            mercado.</p>
                     </div>
                     <div class="trade-controls">
+                        <!-- Selector de Broker -->
+                        <div class="input-group">
+                            <label>Broker / Agente</label>
+                            <select id="trade-broker" class="custom-select"
+                                style="padding: 0.5rem; border: 1px solid var(--panel-border); border-radius: 6px; background: var(--bg-color); color: var(--text-primary); font-size: 0.9rem; outline: none;">
+                                <option value="PPI">PPI (0.6% - Mín $1.5)</option>
+                                <option value="IOL">IOL (0.5% - Mín $2.0)</option>
+                                <option value="Interactive Brokers">Interactive Brokers (0.35%)</option>
+                                <option value="Sin Comisión">Sin Comisión</option>
+                            </select>
+                        </div>
+
+                        <!-- Cantidad -->
                         <div class="input-group">
                             <label>Cantidad</label>
                             <input type="number" id="trade-qty" min="0.1" step="0.1" placeholder="0.00">
                         </div>
+
                         <div class="action-buttons">
                             <button id="btn-buy" class="btn-buy">COMPRAR</button>
                             <button id="btn-sell" class="btn-sell">VENDER</button>
                         </div>
                     </div>
-                    
-                    <div class="market-pressure-container" style="margin-top: 1.5rem; display: none;" id="pressure-container">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.4rem;">
+
+                    <!-- Desglose de Comisiones -->
+                    <div id="costo-desglose"
+                        style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 12px; border-top: 1px solid var(--panel-border); padding-top: 8px;">
+                        <span>Subtotal: <strong id="lbl-subtotal"
+                                style="color: var(--text-primary);">$0.00</strong></span> |
+                        <span>Comisión: <strong id="lbl-comision"
+                                style="color: var(--accent-sell);">$0.00</strong></span> |
+                        <span>Total Requerido: <strong id="lbl-total"
+                                style="color: var(--accent-buy); font-weight: bold;">$0.00</strong></span>
+                    </div>
+
+                    <div class="market-pressure-container" style="margin-top: 1.5rem; display: none;"
+                        id="pressure-container">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.4rem;">
                             <span>Fuerza Compradora (Bid)</span>
                             <span>Fuerza Vendedora (Ask)</span>
                         </div>
-                        <div class="pressure-bar" style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #334155;">
-                            <div id="pressure-bid" style="width: 50%; background: var(--accent-buy); transition: width 0.8s ease-out;"></div>
-                            <div id="pressure-ask" style="width: 50%; background: var(--accent-sell); transition: width 0.8s ease-out;"></div>
+                        <div class="pressure-bar"
+                            style="display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #334155;">
+                            <div id="pressure-bid"
+                                style="width: 50%; background: var(--accent-buy); transition: width 0.8s ease-out;">
+                            </div>
+                            <div id="pressure-ask"
+                                style="width: 50%; background: var(--accent-sell); transition: width 0.8s ease-out;">
+                            </div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 0.25rem;">
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.7rem; margin-top: 0.25rem;">
                             <span id="bid-size-label" style="color: var(--accent-buy); font-weight: bold;">--%</span>
                             <span id="ask-size-label" style="color: var(--accent-sell); font-weight: bold;">--%</span>
                         </div>
@@ -155,7 +198,8 @@
                         <div class="info-item"><span>Industria:</span> <strong id="info-industry">-</strong></div>
                         <div class="info-item"><span>Market Cap:</span> <strong id="info-mcap">-</strong></div>
                         <div class="info-item"><span>P/E Ratio:</span> <strong id="info-pe">-</strong></div>
-                        <div class="info-item"><span>Recomendación:</span> <strong id="info-rec" class="rec-badge">-</strong></div>
+                        <div class="info-item"><span>Recomendación:</span> <strong id="info-rec"
+                                class="rec-badge">-</strong></div>
                     </div>
                 </div>
 
@@ -175,7 +219,8 @@
             <div class="modal-header">
                 <h2>Rendimiento Histórico</h2>
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <label style="font-size: 0.9rem; color: #aaa;"><input type="checkbox" id="chk-benchmark"> Comparar vs S&P 500 (SPY)</label>
+                    <label style="font-size: 0.9rem; color: #aaa;"><input type="checkbox" id="chk-benchmark"> Comparar
+                        vs S&P 500 (SPY)</label>
                     <span id="roi-close" class="close">&times;</span>
                 </div>
             </div>
@@ -185,7 +230,8 @@
         </div>
     </div>
 
-    <!-- Forzar recarga de caché con ?v=11 -->
-    <script src="/static/app.js?v=11"></script>
+    <!-- Forzar recarga de caché con ?v=13 -->
+    <script src="/static/app.js?v=13"></script>
 </body>
+
 </html>
