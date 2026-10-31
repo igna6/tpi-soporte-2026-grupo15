@@ -20,7 +20,7 @@ El alcance de este proyecto es desarrollar un **Simulador de Inversiones** inter
 
 *(Nota: Reemplazar la ruta de la imagen con la ubicación real de tu diagrama exportado de draw.io actualizado)*
 
-![Modelo de Dominio](./images/modelo_dominio.png)
+![[DER]](https://drive.google.com/file/d/1e7ciR7wceGImaaelErfbyrsjsjFLi6hy/view?usp=sharing) 
 
 ---
 
