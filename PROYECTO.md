@@ -20,7 +20,7 @@ El alcance de este proyecto es desarrollar un **Simulador de Inversiones** inter
 
 *(Nota: Reemplazar la ruta de la imagen con la ubicación real de tu diagrama exportado de draw.io actualizado)*
 
-![[DER]](https://drive.google.com/file/d/1e7ciR7wceGImaaelErfbyrsjsjFLi6hy/view?usp=sharing) 
+[![Diagrama DER](https://drive.google.com/uc?export=view&id=1e7ciR7wceGImaaelErfbyrsjsjFLi6hy)](https://drive.google.com/file/d/1e7ciR7wceGImaaelErfbyrsjsjFLi6hy/view?usp=sharing)
 
 ---
 
@@ -30,7 +30,7 @@ El sistema implementa una arquitectura estructurada lógicamente en 3 capas (Pre
 
 *(Nota: Reemplazar la ruta de la imagen con la ubicación real de tu diagrama de arquitectura)*
 
-![Bosquejo de Arquitectura](./images/arquitectura.png)
+![Bosquejo de Arquitectura](https://drive.google.com/file/d/1f09V20dCgih-TdjhEtRT3qMIOuhM4mQx/view?usp=sharing)
 
 ---
 
@@ -42,21 +42,24 @@ El sistema implementa una arquitectura estructurada lógicamente en 3 capas (Pre
 * **RF-01 | Consultar Cotización en Tiempo Real:** El sistema debe permitir al usuario ingresar el Ticker de un activo financiero y consultar su precio de mercado actual conectándose a la API de Yahoo Finance.
 * **RF-02 | Registrar Orden de Compra:** El sistema debe permitir al usuario registrar la compra de un activo indicando la cantidad deseada. El sistema calculará el monto total en base al precio actual de la API y lo descontará del saldo disponible del usuario.
 * **RF-03 | Registrar Orden de Venta:** El sistema debe permitir al usuario registrar la venta de un activo que posea en su portafolio. El sistema calculará el total a recibir basándose en la cotización actual de la API y sumará ese monto al saldo del usuario.
+* **RF-04 | Seleccionar Agente Bursátil (Broker) y Calcular Comisión:** El sistema debe permitir al usuario seleccionar el broker para la operación (PPI, IOL o Sin Comisión). La Capa de Negocio calculará automáticamente la comisión aplicable (porcentual o arancel mínimo fijado) y la sumará al costo total de la compra o la descontará del neto de la venta.
 
 **Módulo 2: Visualización y Reportes**
-* **RF-04 | Visualizar Portafolio (Posiciones Actuales):** El sistema debe mostrar en pantalla un listado con los activos que el usuario posee actualmente, indicando para cada uno el Ticker, la cantidad de acciones en tenencia y el precio promedio al que fueron compradas.
-* **RF-05 | Consultar Historial de Transacciones:** El sistema debe proveer una vista donde el usuario pueda revisar el registro histórico de todas sus operaciones (compras y ventas), mostrando fecha, tipo de operación, Ticker, cantidad, precio de ejecución y monto total.
-* **RF-06 | Visualizar Saldo de Cuenta:** El sistema debe mantener visible en todo momento el saldo de dinero virtual (efectivo) que el usuario tiene disponible para realizar nuevas compras.
-* **RF-07 | Generación de Gráficos:** A partir de las inversiones realizadas, se podrán generar gráficos que muestren las ganancias o pérdidas del usuario en un determinado tiempo.
-* **RF-08 | Consultar Perfil del Activo:** El sistema debe permitir al usuario visualizar la información fundamental de la empresa seleccionada (sector, industria y descripción breve) obtenida a través de la API externa.
-* **RF-09 | Visualizar Noticias Relevantes:** El sistema debe mostrar los titulares de las noticias financieras más recientes asociadas al Ticker consultado, extraídas en tiempo real para apoyar la decisión de inversión.
-* **RF-10 | Watchlist (Lista de Seguimiento):** El sistema debe permitir al usuario marcar acciones como "favoritas" y proveer una vista rápida de las cotizaciones en tiempo real de esta lista, sin necesidad de realizar una búsqueda manual.
-* **RF-11 | Comparativa con Índice (Benchmark):** Al generar gráficos de rendimiento, el sistema debe mostrar opcionalmente una curva comparativa con el índice S&P 500 (Ticker: SPY) para evaluar el desempeño de las inversiones contra el mercado.
+* **RF-05 | Visualizar Portafolio (Posiciones Actuales):** El sistema debe mostrar en pantalla un listado con los activos que el usuario posee actualmente, indicando para cada uno el Ticker, la cantidad de acciones en tenencia y el precio promedio al que fueron compradas.
+* **RF-06| Consultar Historial de Transacciones:** El sistema debe proveer una vista donde el usuario pueda revisar el registro histórico de todas sus operaciones (compras y ventas), mostrando fecha, tipo de operación, Ticker, cantidad, precio de ejecución y monto total.
+* **RF-07 | Visualizar Saldo de Cuenta:** El sistema debe mantener visible en todo momento el saldo de dinero virtual (efectivo) que el usuario tiene disponible para realizar nuevas compras.
+* **RF-08 | Generación de Gráficos:** A partir de las inversiones realizadas, se podrán generar gráficos que muestren las ganancias o pérdidas del usuario en un determinado tiempo.
+* **RF-09 | Consultar Perfil del Activo:** El sistema debe permitir al usuario visualizar la información fundamental de la empresa seleccionada (sector, industria y descripción breve) obtenida a través de la API externa.
+* **RF-10 | Visualizar Noticias Relevantes:** El sistema debe mostrar los titulares de las noticias financieras más recientes asociadas al Ticker consultado, extraídas en tiempo real para apoyar la decisión de inversión.
+* **RF-11 | Watchlist (Lista de Seguimiento):** El sistema debe permitir al usuario marcar acciones como "favoritas" y proveer una vista rápida de las cotizaciones en tiempo real de esta lista, sin necesidad de realizar una búsqueda manual.
+* **RF-12 | Comparativa con Índice (Benchmark):** Al generar gráficos de rendimiento, el sistema debe mostrar opcionalmente una curva comparativa con el índice S&P 500 (Ticker: SPY) para evaluar el desempeño de las inversiones contra el mercado.
+* **RF-13 | Indicadores de Análisis Técnico / Alertas de Posición:** El sistema debe mostrar sugerencias automáticas de Take Profit (ganancia esperada) y Stop Loss (límite de pérdida) sobre cada activo del portafolio, calculados sobre el precio promedio ponderado de compra.
 
 **Módulo 3: Validaciones del Sistema (Reglas de Negocio)**
-* **RF-12 | Validar Fondos Suficientes (RN-01):** Al intentar realizar una compra, el sistema debe impedir la transacción y mostrar un mensaje de error si el costo total (Precio Unitario x Cantidad) supera el saldo de cuenta disponible.
-* **RF-13 | Validar Tenencia Previa (RN-02):** Al intentar realizar una venta, el sistema debe impedir la transacción y mostrar un mensaje de error si el usuario intenta vender una cantidad mayor a la que posee en su portafolio.
-* **RF-14 | Validar Monto Mínimo (RN-03):** El sistema debe rechazar cualquier operación de compra cuyo monto total calculado sea inferior a $10.00 USD (o la moneda base definida), mostrando el aviso correspondiente para evitar micro-transacciones.
+* **RF-14 | Validar Fondos Suficientes (RN-01):** Al intentar realizar una compra, el sistema debe impedir la transacción y mostrar un mensaje de error si el costo total (Monto del Activo + Comisión del Broker seleccionado) supera el saldo de cuenta disponible.
+* **RF-15 | Validar Tenencia Previa (RN-02):** Al intentar realizar una venta, el sistema debe impedir la transacción y mostrar un mensaje de error si el usuario intenta vender una cantidad mayor a la que posee en su portafolio.
+* **RF-16 | Validar Monto Mínimo (RN-03):** El sistema debe rechazar cualquier operación de compra cuyo monto total calculado sea inferior a $10.00 USD (o la moneda base definida), mostrando el aviso correspondiente para evitar micro-transacciones.
+* **RF-17 | Seleccionar Agente Bursátil (Broker) y Calcular Comisión:** El sistema debe permitir al usuario seleccionar el broker para la operación (PPI, IOL o Sin Comisión). La Capa de Negocio calculará automáticamente la comisión aplicable (porcentual o arancel mínimo fijado) y la sumará al costo total de la compra o la descontará del neto de la venta.
 
 ---
 
@@ -94,7 +97,7 @@ El sistema implementa una arquitectura estructurada lógicamente en 3 capas (Pre
 ## Stack Tecnológico
 
 ### Capa de Datos
-* **Tecnología:** Base de Datos SQL (SQLite) mediante la librería estándar `sqlite3` de Python.
+* **Tecnología:** Base de Datos SQL (SQLite 3) mediante el módulo database.py.
 * **Justificación:** Se escogió SQLite porque es un motor relacional extremadamente ligero que guarda todos los datos en un archivo local `.db`. Esto cumple con el requerimiento de funcionar en un equipo hogareño estándar sin necesidad de configurar ni levantar servidores externos. Las noticias, al ser volátiles, no se persistirán, pero el catálogo de activos se enriquecerá con el perfil de cada empresa.
 
 ### Capa de Negocio
