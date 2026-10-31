@@ -30,7 +30,7 @@ El sistema implementa una arquitectura estructurada lógicamente en 3 capas (Pre
 
 *(Nota: Reemplazar la ruta de la imagen con la ubicación real de tu diagrama de arquitectura)*
 
-![Bosquejo de Arquitectura](https://drive.google.com/uc?export=view&id=1f09V20dCgih-TdjhEtRT3qMIOuhM4mQx)
+[![Bosquejo de Arquitectura](https://drive.google.com/uc?export=view&id=1f09V20dCgih-TdjhEtRT3qMIOuhM4mQx)](https://drive.google.com/file/d/1f09V20dCgih-TdjhEtRT3qMIOuhM4mQx/view?usp=sharing)
 
 ---
 
