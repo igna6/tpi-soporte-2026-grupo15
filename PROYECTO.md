@@ -1,7 +1,7 @@
 # Simulador de Inversiones
 
 ---
-[![Documentacion](https://drive.google.com/uc?export=view&id=1e7ciR7wceGImaaelErfbyrsjsjFLi6hy)](https://drive.google.com/drive/folders/1cqcP50Q9E3WfAuoIeOK2L_lEJ1y1z2Ge?usp=sharing)usp=sharing)))]
+[![Documentacion](https://drive.google.com/uc?export=view&id=1e7ciR7wceGImaaelErfbyrsjsjFLi6hy)](https://drive.google.com/drive/folders/1cqcP50Q9E3WfAuoIeOK2L_lEJ1y1z2Ge?usp=sharing)
 ## Descripción del proyecto
 
 El alcance de este proyecto es desarrollar un **Simulador de Inversiones** interactivo. Es una aplicación web que permite a cualquier persona simular la compra y venta de acciones de empresas reales (como Apple, Tesla o Google) utilizando dinero virtual, fundamentado en cotizaciones obtenidas del mercado actual en tiempo real.
